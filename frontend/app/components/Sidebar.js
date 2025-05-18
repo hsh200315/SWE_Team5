@@ -2,7 +2,6 @@
 export default function Sidebar() {
 	return (
 		<div className="h-screen w-full min-w-auto">
-			{/* 사이드바 */}
 			<aside className="h-screen w-64 bg-sky-200 p-4">
 				<h1 className="text-xl font-bold text-white mb-4">SENA.AI</h1>
 				<div className="text-white font-semibold mb-2">CHATROOMS</div>

@@ -1,0 +1,38 @@
+BEGIN TRANSACTION;
+
+CREATE TABLE IF NOT EXISTS User (
+    user_id     VARCHAR(20) PRIMARY KEY,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ChatRoom (
+    room_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_name   VARCHAR(100) NOT NULL,
+    owner_id    VARCHAR(20) NOT NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_id) REFERENCES User(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS Chat (
+    chat_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_id      INTEGER NOT NULL,
+    sender_id    VARCHAR(20) NOT NULL,
+    message      TEXT,
+    is_from_AI   BOOLEAN NOT NULL DEFAULT FALSE,
+    timestamp    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    map_image    BLOB,
+    FOREIGN KEY (room_id) REFERENCES ChatRoom(room_id),
+    FOREIGN KEY (sender_id) REFERENCES User(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS ChatRoomUser (
+    room_user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_id      INTEGER NOT NULL,
+    user_id      VARCHAR(20) NOT NULL,
+    joined_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (room_id) REFERENCES ChatRoom(room_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+);
+
+COMMIT;

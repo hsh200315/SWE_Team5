@@ -2,11 +2,16 @@
 
 import Sidebar from "../components/Sidebar"
 import { useState, useEffect, useRef } from "react"
+import ReactModal from "react-modal";
 import { GoCpu, GoPencil, GoFile, GoSearch, GoCheckCircle, GoPaperAirplane } from "react-icons/go";
+
+ReactModal.setAppElement("#root");
 
 export default function ChatRoom() {
 	const [buttonOnOff, SetButtonOnOff] = useState([false, false, false, false, false]);
+	const [modalOnOff, SetModalOnOff] = useState(false)
 	const chatRef = useRef(null);
+	const ModalRef = useRef(null);
 
 	useEffect(() => {
 		if (chatRef.current) {
@@ -14,10 +19,18 @@ export default function ChatRoom() {
 			top: chatRef.current.scrollHeight,
 			behavior: "smooth"});
 		}
+		if (ModalRef.current) {
+			ModalRef.current.scrollTo({
+			top: ModalRef.current.scrollHeight,
+			behavior: "smooth"});
+		}
 	}, []);
 
 	return (
 		<div className="flex h-screen">
+			
+			{/* 모달창 */}
+			<CheckModal modalOnOff={modalOnOff} SetModalOnOff={SetModalOnOff} ModalRef={ModalRef}/>
 
 			{/* 사이드바 */}
 			<div className="h-full w-1/7">
@@ -53,7 +66,7 @@ export default function ChatRoom() {
 						className="w-full resize-none overflow-y-auto p-2 rounded shadow focus:outline-none border-b border-gray-300"
 					/>
 					<div className="flex justify-between items-center">
-						<ButtonList SetButtonOnOff={SetButtonOnOff} buttonOnOff={buttonOnOff}/>
+						<ButtonList SetButtonOnOff={SetButtonOnOff} buttonOnOff={buttonOnOff} SetModalOnOff={SetModalOnOff}/>
 						<button className="p-2 text-white bg-blue-500 rounded-2xl shadow hover:bg-blue-600"><GoPaperAirplane className="text-base"/></button>
 					</div>
 				</div>
@@ -82,8 +95,9 @@ function ChatBubbleMine({ children }) {
 	)
 }
 
-function ButtonList({SetButtonOnOff, buttonOnOff}){
+function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff }) {
 	const buttonTitle = ["AI에게 물어보기", "프롬프트 추천", "일정표 형식 답변 생성", "대화 내역 검색"];
+
 	return(
 		<div className="flex justify-center">
 			<div className="flex space-x-2">
@@ -116,17 +130,96 @@ function ButtonList({SetButtonOnOff, buttonOnOff}){
 			</div>
 			<div className="flex items-center justify-center">
 				<button 
-					onClick={() => SetButtonOnOff(prev => {
-					const newState = [...prev];
-					newState[4] = !prev[4];
-					return newState;
-				})}
-				className={`ml-[0.5rem] rounded-full border text-3xl transition-colors duration-200 border-none
-					${buttonOnOff[4] ? "bg-green-500 text-white" : "bg-white text-black"}`}
+					onClick={() => {
+						SetButtonOnOff(prev => {
+							const newState = [...prev];
+							newState[4] = !prev[4];
+							return newState;
+						});
+						SetModalOnOff(prev => !prev);
+					}}
+					className={`ml-[0.5rem] rounded-full border text-3xl transition-colors duration-200 border-none
+						${buttonOnOff[4] ? "bg-green-500 text-white" : "bg-white text-black"}`}
 				>
 					<GoCheckCircle />
 				</button>
 			</div>
 		</div>
+	)
+}
+
+function CheckModal({modalOnOff, SetModalOnOff, ModalRef}){
+	useEffect(() => {
+		if (modalOnOff && ModalRef?.current) {
+			ModalRef.current.scrollTop = ModalRef.current.scrollHeight;
+		}
+	}, [modalOnOff]);
+
+	return(
+		<ReactModal
+			isOpen={modalOnOff}
+			onRequestClose={() => SetModalOnOff(false)}
+			ariaHideApp={false}
+			style={{
+				overlay: {
+					backgroundColor: 'rgba(0, 0, 0, 0.4)',
+					zIndex: 50,
+				},
+				content: {
+					top: '20%',
+					left: '50%',
+					right: 'auto',
+					bottom: 'auto',
+					transform: 'translate(-50%, 0)',
+					width: '50vw',
+					height: '60vh',
+					padding: '1rem',
+					borderRadius: '1rem',
+					border: '1px solid #ccc',
+					boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+					display: 'flex',
+					flexDirection: 'column'
+				},
+			}}
+		>
+			{/* Header */}
+			<div className="flex justify-between items-center border-b pb-2 mb-3">
+				<input
+					type="text"
+					placeholder="채팅 검색..."
+					className="flex-grow px-3 py-2 border-none rounded-md text-sm mr-2"
+				/>
+				<button onClick={() => SetModalOnOff(false)} className="text-gray-500 hover:text-black text-3xl font-bold">&times;</button>
+			</div>
+
+			{/* Top Right Toggle Buttons */}
+			<div className="flex justify-end w-[100%] h-[5%]">
+				<select className="border w-[20%]">
+					<option>Both</option>
+					<option>Checked</option>
+					<option>Unchecked</option>
+				</select>
+			</div>
+			
+
+		  {/* Chat content area */}
+		  <div ref={ModalRef} className="flex-1 overflow-y-auto border-none rounded bg-gray-100 p-3 space-y-2">
+			<ChatBubbleMine>우리 중강하면 어디로</ChatBubbleMine>
+			<ChatBubbleOther name="중현">저번에 말했던 영국 런던은 어때?</ChatBubbleOther>
+			<ChatBubbleOther name="주호">거기 가면 뭐함?</ChatBubbleOther>
+			<ChatBubbleOther name="중현">몰루? 학주가 제안함</ChatBubbleOther>
+			<ChatBubbleMine>우리 중강하면 어디로</ChatBubbleMine>
+			<ChatBubbleOther name="중현">저번에 말했던 영국 런던은 어때?</ChatBubbleOther>
+			<ChatBubbleOther name="주호">거기 가면 뭐함?</ChatBubbleOther>
+			<ChatBubbleOther name="중현">몰루? 학주가 제안함</ChatBubbleOther>
+		  </div>
+
+		  {/* Footer Button */}
+		  <div className="mt-4 flex justify-end">
+			<button className="bg-green-500 text-white px-4 py-2 rounded-full text-sm shadow hover:bg-green-600">
+			  선택된 채팅 내역 질문에 포함
+			</button>
+		  </div>
+		</ReactModal>
 	)
 }

@@ -13,26 +13,26 @@ module.exports = (io, socket) => {
             await chatModel.addchat({roomId: roomId, username: username, message: msg, isFromAI: false, mapImage: null});
             io.to(makeRoomId(roomId)).emit('chatMsg', {username: username, message: msg});
         } catch {
-            socket.emit("error", {message: "msg is not sent because of server error."});
+            socket.emit("server-error", {message: "msg is not sent because of server error."});
         }
     });
     socket.on('invite', async (data) => {
         const roomId = socket.roomId;
         const {inviteUsername} = data;
         if(!inviteUsername) {
-            socket.emit("error", {message: "inviteUsername is empty."});
+            socket.emit("invite-error", {message: "inviteUsername is empty."});
             return;
         }
         try {
             const isExistInviteUsernameInRoom = await chatRoomModel.findById({username: inviteUsername, roomId: roomId});
             if(!isExistInviteUsernameInRoom) {
-                socket.emit("error", {message: `user ${inviteUsername} is not existed`});
+                socket.emit("invite-error", {message: `user ${inviteUsername} is not existed`});
                 return;
             }
             await chatRoomModel.invite({username: inviteUsername, roomId: roomId});
             io.to(makeRoomId(roomId)).emit("invite", {username: inviteUsername});
         } catch {
-            socket.emit("error", {message: "user is not invited because of server error."});
+            socket.emit("server-error", {message: "user is not invited because of server error."});
         }
     });
     socket.on('leave', async (data) => {
@@ -42,7 +42,7 @@ module.exports = (io, socket) => {
             await chatRoomModel.leave({username: username});
             io.to(makeRoomId(roomId)).emit("leave", {username: username});
         } catch {
-            socket.emit("error", {message: "user is not left because of server error"});
+            socket.emit("server-error", {message: "user is not left because of server error"});
         }
     })
 }

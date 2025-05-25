@@ -10,5 +10,4 @@ module.exports = {
     // database
     DB_PATH: path.join(__dirname, '..', process.env.DB_PATH),
     API_VERSION: process.env.API_VERSION || 'v1',
-    API_URL: '/api/'+this.API_VERSION
 };

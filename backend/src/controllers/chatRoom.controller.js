@@ -1,6 +1,6 @@
 const { success, failed } = require("../config/response");
 const chatRoomModel = require("../models/chatRoom.model");
-const authModel = require('../models/auth.model');
+
 module.exports = {
     createRoom: async (req, res) => {
         try {

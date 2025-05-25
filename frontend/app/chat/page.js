@@ -49,9 +49,8 @@ export default function ChatRoom() {
 				{/* 하단 입력창 */}
 				<div className="absolute bottom-0 left-[29vw] right-[15vw] border-t bg-white p-4 mb-[2vh] border rounded-xl">
 					<textarea
-						rows={1}
-						className="w-full resize-none overflow-y-auto border p-2 rounded shadow focus:outline-none border-none"
-						style={{ maxHeight: '30vh' }}
+						rows={2}
+						className="w-full resize-none overflow-y-auto p-2 rounded shadow focus:outline-none border-b border-gray-300"
 					/>
 					<div className="flex justify-between items-center">
 						<ButtonList SetButtonOnOff={SetButtonOnOff} buttonOnOff={buttonOnOff}/>

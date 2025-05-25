@@ -2,9 +2,9 @@
 
 import Sidebar from "../components/Sidebar"
 import { useState, useEffect, useRef } from "react"
+import { GoCpu, GoPencil, GoFile, GoSearch, GoCheckCircle, GoPaperAirplane } from "react-icons/go";
 
 export default function ChatRoom() {
-	const buttonTitle = ["AI에게 물어보기", "프롬프트 추천", "일정표 형식 답변 생성", "대화 내역 정리", "기타"]
 	const [buttonOnOff, SetButtonOnOff] = useState([false, false, false, false, false]);
 	const chatRef = useRef(null);
 
@@ -47,16 +47,15 @@ export default function ChatRoom() {
 				</div>
 				
 				{/* 하단 입력창 */}
-				<div className="absolute bottom-0 left-[29vw] right-[15vw] border-t bg-white p-4 mb-[2vh]">
+				<div className="absolute bottom-0 left-[29vw] right-[15vw] border-t bg-white p-4 mb-[2vh] border rounded-xl">
 					<textarea
-						placeholder="안녕 세나야. 6월 중순부터..."
-						rows={2}
-						className="w-full resize-none overflow-y-auto border p-2 rounded shadow focus:outline-none"
+						rows={1}
+						className="w-full resize-none overflow-y-auto border p-2 rounded shadow focus:outline-none border-none"
 						style={{ maxHeight: '30vh' }}
 					/>
 					<div className="flex justify-between items-center">
 						<ButtonList SetButtonOnOff={SetButtonOnOff} buttonOnOff={buttonOnOff}/>
-						<button className="px-4 py-2 text-white bg-blue-500 rounded shadow hover:bg-blue-600">전송</button>
+						<button className="p-2 text-white bg-blue-500 rounded-2xl shadow hover:bg-blue-600"><GoPaperAirplane className="text-base"/></button>
 					</div>
 				</div>
 			</main>
@@ -85,7 +84,7 @@ function ChatBubbleMine({ children }) {
 }
 
 function ButtonList({SetButtonOnOff, buttonOnOff}){
-	const buttonTitle = ["AI에게 물어보기", "프롬프트 추천", "일정표 형식 답변 생성", "대화 내역 정리", "기타"];
+	const buttonTitle = ["AI에게 물어보기", "프롬프트 추천", "일정표 형식 답변 생성", "대화 내역 검색"];
 	return(
 		<div className="flex space-x-2">
 			{[0, 1, 2, 3, 4].map((idx) => {
@@ -101,8 +100,20 @@ function ButtonList({SetButtonOnOff, buttonOnOff}){
 						className={`px-3 py-1 rounded-full border text-sm ${
 							buttonOnOff[idx] ? "bg-sky-400 text-white" : "bg-white text-black"
 						}`}
-					>
-						{label}
+					>	
+						<div className="flex items-center space-x-1">
+							{idx === 4 ? (
+								<GoCheckCircle className="text-2xl" />
+							) : (
+								<>
+									{idx === 0 && <GoCpu className="text-base" />}
+									{idx === 1 && <GoPencil className="text-base" />}
+									{idx === 2 && <GoFile className="text-base" />}
+									{idx === 3 && <GoSearch className="text-base" />}
+									<span>{label}</span>
+								</>
+							)}
+						</div>
 					</button>
 				);
 			})}

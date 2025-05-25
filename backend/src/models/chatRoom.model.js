@@ -6,7 +6,7 @@ module.exports = {
     userlist: async (data) => {
         const {roomId} = data;
         try {
-            const result  = await all('SELECT user_id FROM ChatRoomUser ORDER BY user_id ASC WHERE room_id = ?', [roomId]);
+            const result  = await all('SELECT user_id FROM ChatRoomUser WHERE room_id = ? ORDER BY user_id ASC', [roomId]);
             return result;
         } catch (err) {
             return new Error(err);
@@ -54,7 +54,7 @@ module.exports = {
     leave: async (data) => {
         const {username, roomId} = data;
         try {
-            const result = await run('DELETE FROM ChatRoomUser WHERE room_id = ? AND user_id = ?', [username, roomId]);
+            const result = await run('DELETE FROM ChatRoomUser WHERE room_id = ? AND user_id = ?', [roomId, username]);
             return result;
         } catch(err) {
             return new Error(err);
@@ -63,7 +63,16 @@ module.exports = {
     findById: async (data) => {
         const {username, roomId} = data;
         try {
-            const result = await get('SELECT * FROM ChatRoomUser WHERE room_id = ? AND user_id = ?', [roomId, username]);
+            const result = await get('SELECT room_id, user_id FROM ChatRoomUser WHERE room_id = ? AND user_id = ?', [roomId, username]);
+            return result;
+        } catch(err) {
+            return new Error(err);
+        }
+    },
+    getRoom: async (data) => {
+        const {roomId} = data;
+        try {
+            const result = await get('SELECT * FROM ChatRoom WHERE room_id = ?', [roomId]);
             return result;
         } catch(err) {
             return new Error(err);

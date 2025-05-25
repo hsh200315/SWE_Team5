@@ -1,5 +1,5 @@
 const { get } = require("../config/db");
-const initInMemoryDb = require("./utils/initailize");
+const initInMemoryDb = require("./utils/initDB");
 let db;
 beforeAll(async () => {
     db = await initInMemoryDb();

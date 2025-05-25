@@ -1,4 +1,5 @@
 const { success, failed } = require("../config/response");
+const authModel = require("../models/auth.model");
 const chatRoomModel = require("../models/chatRoom.model");
 
 module.exports = {
@@ -6,12 +7,21 @@ module.exports = {
         try {
             const {username, roomname} = req.body;
             if(!username || !roomname) {
-            return failed(res, {
-                code: 400,
-                message: 'BAD REQUEST',
-                error: 'username and roomname required.'
-            });
+                return failed(res, {
+                    code: 400,
+                    message: 'BAD REQUEST',
+                    error: 'username and roomname required.'
+                });
             }
+            const isExistUsername = await authModel.findById({username: username});
+            if(!isExistUsername) {
+                return failed(res, {
+                    code: 404,
+                    message: `user ${username} not existed`,
+                    error: 'NOT FOUND'
+                    });
+                }
+
             const result = await chatRoomModel.create({username: username, roomname: roomname});
             return success(res, {
                 code: 201,

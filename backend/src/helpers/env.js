@@ -8,7 +8,7 @@ const rawPath = process.env.DB_PATH;
 const DB_PATH = rawPath === ':memory:'
   ? ':memory:'
   : path.join(__dirname, '..', rawPath);
-console.log(DB_PATH)
+
 
 
 module.exports = {

@@ -9,18 +9,12 @@ const sqlite3 = require('sqlite3').verbose();
 const {DB_PATH} = require('../helpers/env')
 
 
-
-
-// 1) DB 파일 경로 설정 (없으면 자동 생성)
-
-// 2) 데이터베이스 열기
-
 const db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
   if (err) {
     console.error('SQLITE 연결 오류:', err.message);
     process.exit(1);
   }
-  console.log('✅ SQLite DB 연결됨:', DB_PATH);
+  //console.log('✅ SQLite DB 연결됨:', DB_PATH);
 });
 
 function run(sql, params = []) {
@@ -33,7 +27,7 @@ function run(sql, params = []) {
 }
 // 모든 행을 다 가져온다.
 function all(sql, params = []) {
-  return new Promise((reject) => {
+  return new Promise((resolve,reject) => {
     db.all(sql, params, (err, rows) => {
       if (err) return reject(err);
       resolve(rows);

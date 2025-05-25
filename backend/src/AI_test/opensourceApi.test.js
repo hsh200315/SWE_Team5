@@ -14,7 +14,7 @@ async function getSearchResult(){
         'Accept': 'application/json',
         'X-Subscription-Token': BRAVE_API_KEY
     },
-    params: { q: "여름 국내 여행지 추천", count: 5 }
+    params: { q: "제주 중문 오션뷰 숙소", count: 5 }
     });
     console.log(JSON.stringify(res.data, null, 2));
 
@@ -22,7 +22,7 @@ async function getSearchResult(){
 
 // Text Search API 호출 함수
 async function getPlacesByTextSearch() {
-  const query = '강남역 맛집';
+  const query = '제주 중문 숙소';
   const url = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 
   try {
@@ -47,7 +47,7 @@ async function getPlacesByTextSearch() {
       .sort((a, b) => b.rating - a.rating);
 
     // 출력
-    console.log(JSON.stringify(sorted, null, 2));
+    //console.log(JSON.stringify(sorted, null, 2));
   } catch (error) {
     console.error('API 호출 실패:', error.message);
   }

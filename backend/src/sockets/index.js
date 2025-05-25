@@ -24,11 +24,17 @@ module.exports = (io, socket) => {
             return;
         }
         try {
-            const isExistInviteUsernameInRoom = await chatRoomModel.findById({username: inviteUsername, roomId: roomId});
-            if(!isExistInviteUsernameInRoom) {
+            const isExistUsername = await authModel.findById({username: inviteUsername});
+            if(!isExistUsername) {
                 socket.emit("invite-error", {message: `user ${inviteUsername} is not existed`});
                 return;
             }
+            const isExistInviteUsernameInRoom = await chatRoomModel.findById({username: inviteUsername, roomId: roomId});
+            if(isExistInviteUsernameInRoom) {
+                socket.emit("invite-error", {message: `user ${inviteUsername} is already invited`});
+                return;
+            }
+            
             await chatRoomModel.invite({username: inviteUsername, roomId: roomId});
             io.to(makeRoomId(roomId)).emit("invite", {username: inviteUsername});
         } catch {

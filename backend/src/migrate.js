@@ -6,6 +6,7 @@ const { open } = require('sqlite');
 const { DB_PATH } = require('./helpers/env');
 
 (async () => {
+
   const db = await open({
     filename: DB_PATH,
     driver: sqlite3.Database

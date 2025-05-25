@@ -1,5 +1,15 @@
-require('dotenv').config();
+require('dotenv').config({
+    path: `.env.${process.env.NODE_ENV || 'development'}`
+  });
+  
 const path   = require('path');
+const rawPath = process.env.DB_PATH;
+
+const DB_PATH = rawPath === ':memory:'
+  ? ':memory:'
+  : path.join(__dirname, '..', rawPath);
+console.log(DB_PATH)
+
 
 module.exports = {
     // app
@@ -8,6 +18,6 @@ module.exports = {
     PORT: process.env.PORT || 4000,
     APP_CLIENT: process.env.APP_CLIENT,
     // database
-    DB_PATH: path.join(__dirname, '..', process.env.DB_PATH),
+    DB_PATH: DB_PATH,
     API_VERSION: process.env.API_VERSION || 'v1',
 };

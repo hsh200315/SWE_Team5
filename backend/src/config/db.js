@@ -1,7 +1,16 @@
 // src/config/db.js
+
+require('dotenv').config({
+  path: `.env.${process.env.NODE_ENV || 'development'}`
+});
+
+
 const sqlite3 = require('sqlite3').verbose();
-const path   = require('path');
 const {DB_PATH} = require('../helpers/env')
+
+
+
+
 // 1) DB 파일 경로 설정 (없으면 자동 생성)
 
 // 2) 데이터베이스 열기

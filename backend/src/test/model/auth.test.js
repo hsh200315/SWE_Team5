@@ -1,6 +1,6 @@
-const { get } = require("../config/db");
-const { register, findById } = require("../models/auth.model");
-const initInMemoryDb = require("./utils/initDB");
+const { get } = require("../../config/db");
+const { register, findById } = require("../../models/auth.model");
+const initInMemoryDb = require("../utils/initDB");
 let db;
 beforeAll(async () => {
     db = await initInMemoryDb();

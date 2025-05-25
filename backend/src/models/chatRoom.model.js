@@ -17,9 +17,7 @@ module.exports = {
     roomlist: async (data) => {
         const {username} = data;
         try {
-            const sql = `SELECT cr.room_id, cr.room_name, cr.updated_at
-                        FROM ChatRoom AS cr JOIN ChatRoomUser AS cru ON cr.room_id = cru.room_id
-                        WHERE cru.user_id = ? ORDER BY cr.updated_at DESC`;
+            const sql = `SELECT cr.room_id, cr.room_name, cr.updated_at FROM ChatRoom AS cr JOIN ChatRoomUser AS cru ON cr.room_id = cru.room_id WHERE cru.user_id = ? ORDER BY cr.updated_at DESC`;
             const result = await all(sql, [username]);
             return result;
         } catch (err) {
@@ -34,7 +32,7 @@ module.exports = {
             const chatRoom = await run('INSERT INTO ChatRoom (room_name, owner_id) VALUES (?, ?)', [roomname, username]);
             await run('INSERT INTO ChatRoomUser (room_id, user_id) VALUES (?, ?)', [chatRoom.id, username]);
             await run('COMMIT');
-            const result = await get('SELECT room_id, room_name, owner_id FROM ChatRoom WHERE room_id = ?',[chatRoom.id]);
+            const result = await get('SELECT room_id, room_name, owner_id, updated_at FROM ChatRoom WHERE room_id = ?',[chatRoom.id]);
             return result;
         } catch (err) {
             return new Error(err);

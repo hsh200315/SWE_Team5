@@ -1,9 +1,9 @@
-const { get,run } = require("../config/db");
+const { get,run } = require("../../config/db");
 
-const chatRoomModel = require("../models/chatRoom.model");
-const initInMemoryDb = require("./utils/initDB");
-const { initUsers } = require("./utils/initUser");
-const { sleep } = require("./utils/timeUtils");
+const chatRoomModel = require("../../models/chatRoom.model");
+const initInMemoryDb = require("../utils/initDB");
+const { initUsers } = require("../utils/initUser");
+const { sleep } = require("../utils/timeUtils");
 
 let db;
 

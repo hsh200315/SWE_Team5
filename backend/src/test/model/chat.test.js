@@ -1,11 +1,11 @@
-const { addchat } = require("../models/chat.model");
-const chatRoomModel = require("../models/chatRoom.model");
-const chatModel = require("../models/chat.model");
-const { inviteUsers } = require("./utils/initChatRoom");
-const initInMemoryDb = require("./utils/initDB");
-const { initUsers } = require("./utils/initUser");
-const { run } = require("../config/db");
-const { sleep } = require("./utils/timeUtils");
+
+const chatRoomModel = require("../../models/chatRoom.model");
+const chatModel = require("../../models/chat.model");
+const { inviteUsers } = require("../utils/initChatRoom");
+const initInMemoryDb = require("../utils/initDB");
+const { initUsers } = require("../utils/initUser");
+const { run } = require("../../config/db");
+const { sleep } = require("../utils/timeUtils");
 let db,aliceRoom,bobRoom,charilRoom;
 const alice = 'alice';
 const bob = 'bob';
@@ -73,9 +73,9 @@ describe('User table test', () => {
         const second = await chatModel.addchat(chat2);
         const chats = await chatModel.chatlist({roomId: room.room_id});
         const roomInfo = await chatRoomModel.getRoom({roomId: room.room_id});
-        
+        console.log(chats);
         expect(chats.length).toBe(2);
-        console.log(chats)
+        
 
         expect(chats[0].message).toBe(chat2.message);
         expect(chats[1].message).toBe(chat1.message);

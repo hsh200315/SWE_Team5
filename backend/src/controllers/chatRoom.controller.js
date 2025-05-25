@@ -18,15 +18,14 @@ module.exports = {
                 return failed(res, {
                     code: 404,
                     message: `user ${username} not existed`,
-                    error: 'NOT FOUND'
+                    error: 'USER NOT FOUND'
                     });
                 }
-
             const result = await chatRoomModel.create({username: username, roomname: roomname});
             return success(res, {
                 code: 201,
                 message: 'Success make room',
-                data: {roomId: result.room_id, owner: result.owner_id, roomname: result.room_name}
+                data: {roomId: result.room_id, owner: result.owner_id, roomname: result.room_name, updated_at: result.updated_at}
             });
         } catch(err) {
             return failed(res, {
@@ -40,6 +39,14 @@ module.exports = {
         try {
             const roomId = parseInt(req.params.id);
             const result = await chatRoomModel.userlist({roomId: roomId});
+            if(result.length == 0) {
+                return failed(res,{
+                    code: 404,
+                    message: "room not existed",
+                    error: "ROOM NOT FOUND"
+                });
+            }
+            
             return success(res, {
                 code: 200,
                 message: "Success get UserList.",
@@ -56,7 +63,23 @@ module.exports = {
     getRoomList: async (req, res) => {
         try {
             const {username} = req.body;
+            if(!username) {
+                return failed(res, {
+                    code: 400,
+                    message: 'BAD REQUEST',
+                    error: 'username required.'
+                });
+            }
+            const isExistUsername = await authModel.findById({username: username});
+            if(!isExistUsername) {
+                return failed(res, {
+                    code: 404,
+                    message: `user ${username} not existed`,
+                    error: 'USER NOT FOUND'
+                    });
+            }
             const result = await chatRoomModel.roomlist({username: username});
+            
             return success(res, {
                 code: 200,
                 message: "Success get roomlist.",
@@ -69,81 +92,5 @@ module.exports = {
                 error: 'Internal Server Error'
             });
         }
-    },
-    // inviteUser: async (req, res) => {
-    //     try {
-    //         const {username, inviteUsername} = req.body;
-    //         const roomId = parseInt(req.params.id);
-
-    //         const isExistUsername = await authModel.findById({username: username});
-            
-    //         if(!isExistUsername) {
-    //             return failed(res, {
-    //                 code: 404,
-    //                 message: `user ${username} not existed`,
-    //                 error: 'NOT FOUND'
-    //             });
-    //         }
-    //         const isExistInviteUsername = await authModel.findById({username: inviteUsername});
-            
-    //         if(!isExistInviteUsername) {
-    //             return failed(res, {
-    //                 code: 404,
-    //                 message: `user ${inviteUsername} not existed`,
-    //                 error: 'NOT FOUND'
-    //             });
-    //         }
-    //         const isExistUsernameInRoom = await chatRoomModel.findById({username: username, roomId: roomId});
-    //         //username이 roomId에 없는 경우,
-    //         if(!isExistUsernameInRoom) {
-    //             return failed(res, {
-    //                 code: 404,
-    //                 message: `user ${username} not in room.`,
-    //                 error: 'ACCESS_DENIED'
-    //             });
-    //         }
-    //         const isExistInviteUsernameInRoom = await chatRoomModel.findById({username: username, roomId: roomId});
-    //         if(isExistInviteUsernameInRoom) {
-    //             return failed(res, {
-    //                 code: 409,
-    //                 message: `user ${inviteUsername} is alreay in room.`,
-    //                 error: 'Conflict'
-    //             });
-    //         }
-            
-    //         await chatRoomModel.invite({username: inviteUsername, roomId: roomId});
-    //         return success(res, {
-    //             code: 201,
-    //             message: `Success Inviting User ${inviteUsername}` 
-    //         });
-    //     } catch(err) {
-    //         return failed(res, {
-    //             code: 500,
-    //             message: error.message,
-    //             error: 'Internal Server Error'
-    //         });
-    //     }
-    // },
-    // leaveRoom: async (req, res) => {
-    //     try {
-    //         const {username} = req.body;
-    //         const roomId = parseInt(req.params.id);
-    //         const isExistUsernameInRoom = await chatRoomModel.findById({username: username, roomId: roomId});
-    //         if(!isExistUsernameInRoom) {
-    //             return failed(res, {
-    //                 code: 404,
-    //                 message: `user ${username} not in room.`,
-    //                 error: 'ACCESS_DENIED'
-    //             });
-    //         }
-            
-    //     } catch(err) {
-    //         return failed(res, {
-    //             code: 500,
-    //             message: error.message,
-    //             error: 'Internal Server Error'
-    //         });
-    //     }
-    // },
-    
+    }
 }

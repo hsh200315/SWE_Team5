@@ -85,25 +85,23 @@ function ChatBubbleMine({ children }) {
 function ButtonList({SetButtonOnOff, buttonOnOff}){
 	const buttonTitle = ["AI에게 물어보기", "프롬프트 추천", "일정표 형식 답변 생성", "대화 내역 검색"];
 	return(
-		<div className="flex space-x-2">
-			{[0, 1, 2, 3, 4].map((idx) => {
-				const label = buttonTitle[idx];
-				return (
-					<button
-						key={idx}
-						onClick={() => SetButtonOnOff(prev => {
-							const newState = [...prev];
-							newState[idx] = !prev[idx];
-							return newState;
-						})}
-						className={`px-3 py-1 rounded-full border text-sm ${
-							buttonOnOff[idx] ? "bg-sky-400 text-white" : "bg-white text-black"
-						}`}
-					>	
-						<div className="flex items-center space-x-1">
-							{idx === 4 ? (
-								<GoCheckCircle className="text-2xl" />
-							) : (
+		<div className="flex justify-center">
+			<div className="flex space-x-2">
+				{[0, 1, 2, 3].map((idx) => {
+					const label = buttonTitle[idx];
+					return (
+						<button
+							key={idx}
+							onClick={() => SetButtonOnOff(prev => {
+								const newState = [...prev];
+								newState[idx] = !prev[idx];
+								return newState;
+							})}
+							className={`px-3 py-1 rounded-full border text-sm ${
+								buttonOnOff[idx] ? "bg-sky-400 text-white" : "bg-white text-black"
+							}`}
+						>	
+							<div className="flex items-center space-x-1">
 								<>
 									{idx === 0 && <GoCpu className="text-base" />}
 									{idx === 1 && <GoPencil className="text-base" />}
@@ -111,11 +109,24 @@ function ButtonList({SetButtonOnOff, buttonOnOff}){
 									{idx === 3 && <GoSearch className="text-base" />}
 									<span>{label}</span>
 								</>
-							)}
-						</div>
-					</button>
-				);
-			})}
+							</div>
+						</button>
+					);
+				})}
+			</div>
+			<div className="flex items-center justify-center">
+				<button 
+					onClick={() => SetButtonOnOff(prev => {
+					const newState = [...prev];
+					newState[4] = !prev[4];
+					return newState;
+				})}
+				className={`ml-[0.5rem] rounded-full border text-3xl transition-colors duration-200 border-none
+					${buttonOnOff[4] ? "bg-green-500 text-white" : "bg-white text-black"}`}
+				>
+					<GoCheckCircle />
+				</button>
+			</div>
 		</div>
 	)
 }

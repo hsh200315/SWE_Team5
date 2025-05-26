@@ -1,6 +1,6 @@
 const authModel = require('../models/auth.model');
 const chatRoomModel = require("../models/chatRoom.model");
-const makeRoomId = require('../utils/makeRoomId');
+const { makeRoomId } = require('../utils/utils');
 
 module.exports = {
     socketAuth: (io) => {
@@ -17,7 +17,9 @@ module.exports = {
             }
             socket.username = username;
             socket.roomId = roomId;
+            
             socket.join(makeRoomId(roomId));
+            
             next();
           });
     }

@@ -73,7 +73,7 @@ describe('User table test', () => {
         const second = await chatModel.addchat(chat2);
         const chats = await chatModel.chatlist({roomId: room.room_id});
         const roomInfo = await chatRoomModel.getRoom({roomId: room.room_id});
-        console.log(chats);
+        
         expect(chats.length).toBe(2);
         
 

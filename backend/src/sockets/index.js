@@ -1,7 +1,8 @@
 const authModel = require('../models/auth.model');
 const chatModel = require('../models/chat.model');
 const chatRoomModel = require('../models/chatRoom.model');
-const makeRoomId = require('../utils/makeRoomId');
+const { makeRoomId } = require('../utils/utils');
+
 
 module.exports = (io, socket) => {
     socket.on('chatMsg',async (msg) => {
@@ -10,8 +11,8 @@ module.exports = (io, socket) => {
         const roomId = socket.roomId;
         const username = socket.username;
         try {
-            await chatModel.addchat({roomId: roomId, username: username, message: msg, isFromAI: false, mapImage: null});
-            io.to(makeRoomId(roomId)).emit('chatMsg', {username: username, message: msg});
+            const chat = await chatModel.addchat({roomId: roomId, sender: username, message: msg, isFromAI: false, mapImage: null});
+            io.to(makeRoomId(roomId)).emit('chatMsg', chat);
         } catch {
             socket.emit("server-error", {message: "msg is not sent because of server error."});
         }
@@ -45,7 +46,12 @@ module.exports = (io, socket) => {
         const roomId = socket.roomId;
         const username = socket.username;
         try {
-            await chatRoomModel.leave({username: username});
+            const isExistUsernameInRoom = await chatRoomModel.findById({username: username, roomId: roomId});
+            
+            if(!isExistUsernameInRoom) {
+                socket.emit("leave-error", {message: `user ${username} is already left.`});
+            }
+            await chatRoomModel.leave({username: username, roomId: roomId});
             io.to(makeRoomId(roomId)).emit("leave", {username: username});
         } catch {
             socket.emit("server-error", {message: "user is not left because of server error"});

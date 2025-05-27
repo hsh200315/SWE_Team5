@@ -25,7 +25,7 @@ const API_URL = `/api/${API_VERSION}`;
 
 app.use(API_URL, require('./routes/auth.route'));
 app.use(API_URL, require('./routes/chatrooms.route'));
-
+app.use(API_URL, require('./routes/AI.route'));
 
 
 app.use((req, res) => {

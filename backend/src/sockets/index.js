@@ -1,6 +1,7 @@
 const authModel = require('../models/auth.model');
 const chatModel = require('../models/chat.model');
 const chatRoomModel = require('../models/chatRoom.model');
+const { streamChat } = require('../AI_model/chat_ai');
 const { makeRoomId } = require('../utils/utils');
 
 
@@ -56,5 +57,21 @@ module.exports = (io, socket) => {
         } catch {
             socket.emit("server-error", {message: "user is not left because of server error"});
         }
-    })
+    });
+
+    socket.on("AI_chat", async ({ input, chatList }) => {
+
+        const roomId = socket.roomId;
+        // AI에게 질문하는 내용 자체도 다른 사람들에게 전송이 되어야 함. 이 부분을 어떻게 처리할 지 논의해보기
+        await streamChat({
+            input,
+            chatList,
+            onToken: (token) => {
+                io.to(makeRoomId(roomId)).emit("AI_chat", token);
+            },
+            onDone: () => {
+                io.to(makeRoomId(roomId)).emit("AI_chat_done");
+            }
+        });
+    });
 }

@@ -46,11 +46,12 @@ describe('User table test', () => {
         }
         // 챗 개수가 1이고
         const result = await chatModel.addchat(chat);
+        
         // 챗 내용과 sender와 room_id가 같은지
         expect(result.room_id).toBe(chat.roomId);
         expect(result.sender_id).toBe(chat.sender);
         expect(result.message).toBe(chat.message);
-
+        
     }),
     test('get chats correctly ordered and update chatroom info', async() => {
         const room = aliceRoom;
@@ -73,6 +74,7 @@ describe('User table test', () => {
         const second = await chatModel.addchat(chat2);
         const chats = await chatModel.chatlist({roomId: room.room_id});
         const roomInfo = await chatRoomModel.getRoom({roomId: room.room_id});
+        
         
         expect(chats.length).toBe(2);
         

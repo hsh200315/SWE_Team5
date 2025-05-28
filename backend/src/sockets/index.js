@@ -6,8 +6,6 @@ const { makeRoomId } = require('../utils/utils');
 
 module.exports = (io, socket) => {
     socket.on('chatMsg',async (msg) => {
-        // db에 먼저 저장한다. 만약 db에 저장이 안되면 error를 반환한다.
-
         const roomId = socket.roomId;
         const username = socket.username;
         try {

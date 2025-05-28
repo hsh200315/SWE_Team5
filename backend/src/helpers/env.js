@@ -20,4 +20,5 @@ module.exports = {
     // database
     DB_PATH: DB_PATH,
     API_VERSION: process.env.API_VERSION || 'v1',
+    SECRET_KEY: process.env.SECRET_KEY
 };

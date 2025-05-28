@@ -20,5 +20,6 @@ module.exports = {
     // database
     DB_PATH: DB_PATH,
     API_VERSION: process.env.API_VERSION || 'v1',
-    OPENAI_API_KEY: process.env.OPENAI_API
+    OPENAI_API_KEY: process.env.OPENAI_API,
+    SECRET_KEY: process.env.SECRET_KEY
 };

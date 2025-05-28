@@ -1,4 +1,5 @@
-const { SECRET_KEY } = require('../helpers/env');
+const { SECRET_KEY, BRAVE_API_KEY } = require('../helpers/env');
+const axios = require('axios');
 const crypto = require('crypto');
 function makeRoomId(roomId) {
     return `room-${roomId}`;
@@ -22,8 +23,23 @@ function decryptMessage(ciphertext) {
     return decrypted;
 }
 
+async function getSearchResult(search){
+    
+    const res = await axios.get('https://api.search.brave.com/res/v1/web/search', {
+    headers: {
+        'Accept': 'application/json',
+        'X-Subscription-Token': BRAVE_API_KEY
+    },
+    params: { q: search, count: 5 }
+    });
+    return JSON.stringify(res.data, null, 2);
+
+}
+
+
 module.exports = {
     makeRoomId,
     encryptMessage,
-    decryptMessage
+    decryptMessage,
+    getSearchResult
 };

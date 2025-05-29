@@ -72,21 +72,28 @@ export default function ChatRoom() {
 				</div>
 				
 				{/* 하단 입력창 */}
-				<div style={{borderRadius:'22'}} className="absolute bottom-0 left-[29vw] right-[15vw] bg-white py-4 px-2 mb-[2vh] border">
-					<textarea
-						rows={2}
-						className="w-full resize-none overflow-y-auto p-2 rounded shadow focus:outline-none border-b border-gray-300"
-					/>
-					<div className="flex justify-between items-center">
-						<ButtonList 
-							SetButtonOnOff={SetButtonOnOff}
-							buttonOnOff={buttonOnOff}
-							SetModalOnOff={SetModalOnOff}
-							chatChecked={chatChecked}
-							setChatChecked={SetChatChecked}/>
-						<button style={{backgroundColor:"#11B8FF"}} className="p-2 rounded-2xl shadow text-white hover:bg-blue-600"><GoPaperAirplane className="text-base"/></button>
+				
+					<div className="absolute bottom-0 left-[29vw] right-[15vw] bg-white py-4 px-2 mb-[2vh] border rounded-[22px]">
+						<textarea
+							rows={1}
+							style={{ maxHeight: '4.5rem' }}
+							onInput={(e) => {
+								e.target.style.height = 'auto';
+								e.target.style.height = `${Math.min(e.target.scrollHeight, 72)}px`; // 72px = ~2 lines
+							}}
+							className="w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none"
+						/>
+						<div className="flex justify-between items-center">
+							<ButtonList 
+								SetButtonOnOff={SetButtonOnOff}
+								buttonOnOff={buttonOnOff}
+								SetModalOnOff={SetModalOnOff}
+								chatChecked={chatChecked}
+								setChatChecked={SetChatChecked}/>
+							<button style={{backgroundColor:"#11B8FF"}} className="p-2 rounded-2xl shadow text-white hover:bg-blue-600"><GoPaperAirplane className="text-base"/></button>
+						</div>
 					</div>
-				</div>
+				
 			</main>
 		</div>
 	)

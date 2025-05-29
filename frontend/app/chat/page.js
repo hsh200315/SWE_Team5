@@ -5,11 +5,18 @@ import { useState, useEffect, useRef } from "react"
 import ReactModal from "react-modal";
 import { GoCpu, GoPencil, GoFile, GoSearch, GoCheckCircle, GoPaperAirplane } from "react-icons/go";
 
-ReactModal.setAppElement("#root");
-
 export default function ChatRoom() {
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			ReactModal.setAppElement("body");
+		}
+	}, []);
+
+
 	const [buttonOnOff, SetButtonOnOff] = useState([false, false, false, false, false]);
 	const [modalOnOff, SetModalOnOff] = useState(false)
+	const [chatChecked, SetChatChecked] = useState(false)
 	const chatRef = useRef(null);
 	const ModalRef = useRef(null);
 
@@ -30,7 +37,12 @@ export default function ChatRoom() {
 		<div className="flex h-screen">
 			
 			{/* 모달창 */}
-			<CheckModal modalOnOff={modalOnOff} SetModalOnOff={SetModalOnOff} ModalRef={ModalRef}/>
+			<CheckModal 
+				modalOnOff={modalOnOff}
+				SetModalOnOff={SetModalOnOff}
+				ModalRef={ModalRef}
+				chatChecked={chatChecked}
+				SetChatChecked={SetChatChecked}/>
 
 			{/* 사이드바 */}
 			<div className="h-full w-1/7">
@@ -66,8 +78,13 @@ export default function ChatRoom() {
 						className="w-full resize-none overflow-y-auto p-2 rounded shadow focus:outline-none border-b border-gray-300"
 					/>
 					<div className="flex justify-between items-center">
-						<ButtonList SetButtonOnOff={SetButtonOnOff} buttonOnOff={buttonOnOff} SetModalOnOff={SetModalOnOff}/>
-						<button className="p-2 text-white bg-blue-500 rounded-2xl shadow hover:bg-blue-600"><GoPaperAirplane className="text-base"/></button>
+						<ButtonList 
+							SetButtonOnOff={SetButtonOnOff}
+							buttonOnOff={buttonOnOff}
+							SetModalOnOff={SetModalOnOff}
+							chatChecked={chatChecked}
+							setChatChecked={SetChatChecked}/>
+						<button className="p-2 bg-blue-500 rounded-2xl shadow" style={{color:'#8F8F8F', borderColor:'#D4D4D4'}}><GoPaperAirplane className="text-base"/></button>
 					</div>
 				</div>
 			</main>
@@ -95,7 +112,7 @@ function ChatBubbleMine({ children }) {
 	)
 }
 
-function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff }) {
+function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff, chatChecked }) {
 	const buttonTitle = ["AI에게 물어보기", "프롬프트 추천", "일정표 형식 답변 생성", "대화 내역 검색"];
 
 	return(
@@ -111,11 +128,12 @@ function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff }) {
 								newState[idx] = !prev[idx];
 								return newState;
 							})}
+							style={{borderColor:"#D4D4D4"}}
 							className={`px-3 py-1 rounded-full border text-sm ${
 								buttonOnOff[idx] ? "bg-sky-400 text-white" : "bg-white text-black"
 							}`}
 						>	
-							<div className="flex items-center space-x-1">
+							<div className="flex items-center space-x-1" style={{color:'#8F8F8F'}}>
 								<>
 									{idx === 0 && <GoCpu className="text-base" />}
 									{idx === 1 && <GoPencil className="text-base" />}
@@ -130,6 +148,11 @@ function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff }) {
 			</div>
 			<div className="flex items-center justify-center">
 				<button 
+					style={{
+						color: chatChecked ? '#ffffff' : '#8F8F8F',
+						borderColor: chatChecked ? '#4ade80' : '#D4D4D4',
+						backgroundColor: chatChecked ? '#4ade80' : '#ffffff',
+					}}
 					onClick={() => {
 						SetButtonOnOff(prev => {
 							const newState = [...prev];
@@ -138,8 +161,7 @@ function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff }) {
 						});
 						SetModalOnOff(prev => !prev);
 					}}
-					className={`ml-[0.5rem] rounded-full border text-3xl transition-colors duration-200 border-none
-						${buttonOnOff[4] ? "bg-green-500 text-white" : "bg-white text-black"}`}
+					className={'ml-[0.5rem] rounded-full border text-3xl transition-colors duration-200 border-none'}
 				>
 					<GoCheckCircle />
 				</button>
@@ -148,7 +170,12 @@ function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff }) {
 	)
 }
 
-function CheckModal({modalOnOff, SetModalOnOff, ModalRef}){
+function CheckModal({modalOnOff, SetModalOnOff, ModalRef, chatChecked, SetChatChecked}){
+	function ClickEvent(){
+		SetChatChecked(!chatChecked)
+		SetModalOnOff(!modalOnOff)
+	}
+	
 	useEffect(() => {
 		if (modalOnOff && ModalRef?.current) {
 			ModalRef.current.scrollTop = ModalRef.current.scrollHeight;
@@ -216,7 +243,9 @@ function CheckModal({modalOnOff, SetModalOnOff, ModalRef}){
 
 		  {/* Footer Button */}
 		  <div className="mt-4 flex justify-end">
-			<button className="bg-green-500 text-white px-4 py-2 rounded-full text-sm shadow hover:bg-green-600">
+			<button 
+				onClick={() => ClickEvent()}
+				className="bg-green-500 text-white px-4 py-2 rounded-full text-sm shadow hover:bg-green-600">
 			  선택된 채팅 내역 질문에 포함
 			</button>
 		  </div>

@@ -84,7 +84,7 @@ export default function ChatRoom() {
 							SetModalOnOff={SetModalOnOff}
 							chatChecked={chatChecked}
 							setChatChecked={SetChatChecked}/>
-						<button className="p-2 bg-blue-500 rounded-2xl shadow" style={{color:'#8F8F8F', borderColor:'#D4D4D4'}}><GoPaperAirplane className="text-base"/></button>
+						<button style={{backgroundColor:"#11B8FF"}} className="p-2 rounded-2xl shadow text-white hover:bg-blue-600"><GoPaperAirplane className="text-base"/></button>
 					</div>
 				</div>
 			</main>

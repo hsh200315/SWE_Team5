@@ -83,11 +83,11 @@ module.exports = {
 
       사용자의 질문에는 하나 이상의 유형이 포함될 수 있고, 포함되지 않은 항목은 출력에 포함되지 않아야 한다. 질문에 유형이 포함되어 있다면 각 항목은 아래와 같이 응답해야 한다:
 
-      - travel_destination: 여행지를 추천해달라는 질문에 해당한다. Brave API 검색에 적합하도록, 질문의 핵심 키워드만 뽑아 정제된 검색 문장을 생성해 제공한다.
-      - tourist_attraction: 관광 명소를 추천해달라는 질문에 해당한다. 마찬가지로 Brave API 검색에 적합한 명칭 또는 문장을 생성해 제공한다.
+      - travel_destination: 특정 도시나 나라와 같은 여행지를 추천해달라는 질문에 해당한다. llm에 물어보기 적합하도록, 사용자의 의도를 담은 문장을 생성해 제공한다. 사용자의 질문에 개수 관련 요청이 있다면 문장 생성 시 반영한다.
+      - tourist_attraction: 관광 명소를 추천해달라는 질문에 해당한다. llm에 물어보기 적합하도록, 사용자의 의도를 담은 문장을 생성해 제공한다. 사용자의 질문에 개수 관련 요청이 있다면 문장 생성 시 반영한다.
       - 특히, 여행지나 관광 명소에 대한 질문이 없으면서 검색 위치도 명확하지 않은 경우 교통편, 항공편, 숙소, 음식점은 x로 표기한다.
       - transportation: 출발지와 도착지를 명시한다. 복수의 이동 경로가 포함되어 있다면 시간 순서대로 배열한다.
-      - flight: 출발지와 도착지를 명시한다. 명시되지 않으면 출발지는 '서울', 도착지는 '없음'으로 기록한다.
+      - flight: 출발지와 도착지를 명시한다. 명시되지 않으면 출발지는 '서울', 도착지는 'x'으로 기록한다.
       - accommodation: 구체적인 검색 위치가 있다면 사용자의 의도에 맞게 검색할 수 있는 짧은 문장을 생성한다. 만약 구체적인 검색 위치(지역명)가 명확하지 않지만 여행지나 관광 명소에 대한 질문이 포함되어 있는 경우 "{location}"으로 표시하고, 사용자의 의도를 포함하는 간단한 설명을 포함한다.
       - restaurant: 구체적인 검색 위치가 있다면 사용자의 의도에 맞게 검색할 수 있는 짧은 문장을 생성한다. 만약 구체적인 검색 위치(지역명)가 명확하지 않지만 여행지나 관광 명소에 대한 질문이 포함되어 있는 경우 "{location}"으로 표시하고, 관련 설명을 포함한다.
       - extra: 위 항목에 포함되지 않는 기타 여행 관련 요청이나 질문을 요약하여 제공한다.
@@ -122,8 +122,37 @@ module.exports = {
     console.log(parsing_result);
 
     if("travel_destination" in  parsing_result){
-      const searchResult = await getSearchResult(parsing_result["travel_destination"]);
-      console.log(searchResult);
+      const travel_destination_prompt = `
+      너는 사용자의 여행 요청에 따라 여행지를 추천하는 전문가야.
+      사용자의 요청을 분석해서 여행지를 추천하되, **"3곳 추천해줘", "여러 군데", "몇 군데"** 등 복수 요청이 없으면 1곳만 추천해. 복수 요청이 있으면 그것에 맞춰서 여러 곳 추천해줘.
+      추천 결과는 항상 다음과 같은 **배열(JSON Array)** 형식으로 출력해야 해:
+      [
+        {
+          "destination": "여행지 이름",
+          "explanation": "추천 이유를 한 문장 이상으로 설명"
+        },
+        ...
+      ]
+
+      다른 텍스트, 설명, 마크다운 없이 **순수 JSON 배열만 출력**해야 한다. 다른 설명, 문장, 코드 블록 표시, 기호 \` 등을 절대 포함하지 않는다.
+      `
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: travel_destination_prompt },
+          { role: "user", content: `user request : ${parsing_result['travel_destination']}`}
+        ]
+      });
+
+      let recommendedList;
+      try {
+        const raw = completion.choices[0].message.content.trim();
+        recommendedList = JSON.parse(raw);
+        console.log("추천된 여행지 목록:", recommendedList);
+      } catch (e) {
+        console.error("JSON 파싱 실패:", e);
+      }
+      
     }
     else{
       

@@ -73,7 +73,7 @@ export default function ChatRoom() {
 				
 				{/* 하단 입력창 */}
 				
-					<div className="absolute bottom-0 left-[29vw] right-[15vw] bg-white py-4 px-2 mb-[2vh] border rounded-[22px]">
+					<div className="absolute bottom-0 left-[29vw] right-[15vw] bg-white p-2 mb-[2vh] border rounded-[22px]">
 						<textarea
 							rows={1}
 							style={{ maxHeight: '4.5rem' }}

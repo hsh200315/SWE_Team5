@@ -23,7 +23,7 @@ export default function Home() {
                     zIndex:10,
                 }} //하얀색 창
             >
-                <div style={{position: 'absolute', left:'50%', top:'40%', alignItems:'center',transform: 'translate(-50%,-50%)',display: 'flex', flexDirection:'column', gap:'15px',}}>
+                <div style={{position: 'absolute', left:'50%', top:'50%', alignItems:'center',transform: 'translate(-50%,-50%)',display: 'flex', flexDirection:'column', gap:'15px',}}>
                     <div style={{display: 'flex', alignItems:'center', gap: '5px',}}>
                         <Image
                             src="/logo_white.png"

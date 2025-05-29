@@ -72,7 +72,7 @@ export default function ChatRoom() {
 				</div>
 				
 				{/* 하단 입력창 */}
-				<div className="absolute bottom-0 left-[29vw] right-[15vw] border-t bg-white p-4 mb-[2vh] border rounded-xl">
+				<div style={{borderRadius:'22'}} className="absolute bottom-0 left-[29vw] right-[15vw] bg-white py-4 px-2 mb-[2vh] border">
 					<textarea
 						rows={2}
 						className="w-full resize-none overflow-y-auto p-2 rounded shadow focus:outline-none border-b border-gray-300"

@@ -22,7 +22,7 @@ async function getSearchResult(){
 
 // Text Search API 호출 함수
 async function getPlacesByTextSearch() {
-  const query = '제주 중문 숙소';
+  const query = '서울 관광 명소';
   const url = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 
   try {
@@ -53,5 +53,5 @@ async function getPlacesByTextSearch() {
   }
 }
 
-//getPlacesByTextSearch();
-getSearchResult();
+getPlacesByTextSearch();
+//getSearchResult();

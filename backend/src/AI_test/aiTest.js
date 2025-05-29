@@ -28,7 +28,7 @@ const payload = {
     // { username: "user2", message: "가족 여행 좋죠! 어떤 지역을 선호하시나요?" },
     // { username: "user1", message: "너무 더운 곳은 좀 그렇고, 자연 풍경이 좋았으면 해" }
   ],
-  user_question: "여행지를 추천해줘 그리고 맛있는 식당이 있을까?"
+  user_question: "안녕"
 };
 
 axios.post('http://localhost:4000/api/v1/ai/ai-test', payload)

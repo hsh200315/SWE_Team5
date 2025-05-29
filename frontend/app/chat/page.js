@@ -137,10 +137,10 @@ function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff, chatChecked })
 							})}
 							style={{borderColor:"#D4D4D4"}}
 							className={`px-3 py-1 rounded-full border text-sm ${
-								buttonOnOff[idx] ? "bg-sky-400 text-white" : "bg-white text-black"
+								buttonOnOff[idx] ? "bg-sky-400" : "bg-white"
 							}`}
 						>	
-							<div className="flex items-center space-x-1" style={{color:'#8F8F8F'}}>
+							<div className="flex items-center space-x-1" style={{color: buttonOnOff[idx] ? 'white' : '#8F8F8F'}}>
 								<>
 									{idx === 0 && <GoCpu className="text-base" />}
 									{idx === 1 && <GoPencil className="text-base" />}

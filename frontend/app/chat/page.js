@@ -126,7 +126,7 @@ function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff, chatChecked })
 	return(
 		<div className="flex justify-center">
 			<div className="flex space-x-2">
-				{[0, 1, 2, 3].map((idx) => {
+				{[0, 1, 2].map((idx) => {
 					const label = buttonTitle[idx];
 					return (
 						<button
@@ -154,20 +154,29 @@ function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff, chatChecked })
 					);
 				})}
 			</div>
+			<div className="flex space-x-2">
+				<button
+					key={3}
+					onClick={()=>SetModalOnOff(prev => !prev)}
+					style={{borderColor:"#D4D4D4"}}
+					className={`px-3 py-1 rounded-full border text-sm ${
+						buttonOnOff[3] ? "bg-sky-400" : "bg-white"
+					}`}
+				>	
+					<div className="flex items-center space-x-1" style={{color: buttonOnOff[3] ? 'white' : '#8F8F8F'}}>
+						<> 
+							<GoSearch className="text-base" />
+							<span>{buttonTitle[3]}</span>
+						</>
+					</div>
+				</button>
+			</div>
 			<div className="flex items-center justify-center">
 				<button 
 					style={{
 						color: chatChecked ? '#ffffff' : '#8F8F8F',
 						borderColor: chatChecked ? '#4ade80' : '#D4D4D4',
 						backgroundColor: chatChecked ? '#4ade80' : '#ffffff',
-					}}
-					onClick={() => {
-						SetButtonOnOff(prev => {
-							const newState = [...prev];
-							newState[4] = !prev[4];
-							return newState;
-						});
-						SetModalOnOff(prev => !prev);
 					}}
 					className={'ml-[0.5rem] rounded-full border text-3xl transition-colors duration-200 border-none'}
 				>

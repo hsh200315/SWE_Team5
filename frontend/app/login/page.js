@@ -6,19 +6,21 @@ import {Roboto} from 'next/font/google'
 export default function Home() {
     return(
         <div style={{height:'100vh', width:'100vw', position:'relative'}}>
-            <Image
-                src="/main.png"
-                alt="login page"
-                fill
-                style={{objectFit: 'cover'}} 
-                priority           
-            />
+            <div style={{position: 'absolute', top: 0, left: 0, height: '100vh', width: '80vw', zIndex: 1}}>
+                <Image
+                    src="/main.png"
+                    alt="login page"
+                    fill
+                    style={{objectFit: 'cover'}} 
+                    priority           
+                />
+            </div>
             <div
                 style={{position: 'absolute',
                     top: 0,
                     right: 0,
                     height: '100vh',
-                    width: '350px',
+                    width: '20vw',
                     backgroundColor: 'white',
                     zIndex:10,
                 }} //하얀색 창
@@ -31,7 +33,7 @@ export default function Home() {
                             width='50'
                             height='50'
                         /> 
-                        <span style={{fontFamily: 'Roboto, sans-serif', fontWeight: 200,fontSize: '30px', color: '#84CDEE'}}>
+                        <span style={{fontFamily: 'Roboto, sans-serif', fontWeight: 200,fontSize: '100%', color: '#84CDEE'}}>
                             SENA.AI
                         </span>  
                     </div>

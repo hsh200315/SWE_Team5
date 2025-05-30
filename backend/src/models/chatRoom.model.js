@@ -1,8 +1,7 @@
 const { all,get, run } = require("../config/db");
 
 module.exports = {
-    // id인 room에 속해있는 user를 다 가져온다.
-    // 이름을 오름차순으로 가젼온다.
+    // 특정 채팅방에 속한 사용자 목록 조회
     userlist: async (data) => {
         const {roomId} = data;
         try {
@@ -12,8 +11,7 @@ module.exports = {
             return new Error(err);
         }
     },
-    // username이 속한 room을 다 가져온다. 이 때. roomId와 roomName 둘 다 가져와야 한다.
-    // 이 때 마지막 채팅이 가장 최신인 chat room list로 가져온다.
+    // 특정 사용자가 참여 중인 채팅방 목록 조회, updated 순으로 가져온다.
     roomlist: async (data) => {
         const {username} = data;
         try {
@@ -24,7 +22,7 @@ module.exports = {
             return new Error(err);
         }
     },
-    // username이 roomname 방을 만든다.
+    // 채팅방 생성 및 사용자 자동 참여 (트랜잭션 처리)
     create: async (data) => {
         const {username, roomname} = data;
         try {
@@ -38,7 +36,7 @@ module.exports = {
             return new Error(err);
         }
     },
-    // user를 roomId에 초대한다.
+    // 채팅방에 사용자 초대
     invite: async (data) => {
         const {username, roomId} = data;
         try {
@@ -48,7 +46,7 @@ module.exports = {
             return new Error(err);
         }
     },
-    // user가 roomId 방에서 나간다.
+    // 채팅방 나가기
     leave: async (data) => {
         const {username, roomId} = data;
         try {
@@ -58,6 +56,7 @@ module.exports = {
             return new Error(err);
         }
     },
+    // 특정 사용자가 해당 채팅방에 존재하는지 확인
     findById: async (data) => {
         const {username, roomId} = data;
         try {
@@ -67,6 +66,7 @@ module.exports = {
             return new Error(err);
         }
     },
+    // 특정 채팅방의 전체 정보 조회
     getRoom: async (data) => {
         const {roomId} = data;
         try {

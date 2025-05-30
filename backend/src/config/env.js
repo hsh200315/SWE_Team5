@@ -22,6 +22,7 @@ module.exports = {
     API_VERSION: process.env.API_VERSION || 'v1',
     OPENAI_API_KEY: process.env.OPENAI_API,
     SECRET_KEY: process.env.SECRET_KEY,
+    // api key
     BRAVE_API_KEY: process.env.BRAVE_API,
     GOOGLE_API_KEY: process.env.GOOGLE_API,
 };

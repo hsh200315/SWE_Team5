@@ -18,7 +18,6 @@ describe('Auth API', () => {
       .send({});
     expect(res.statusCode).toBe(400);
     
-    //expect(res.body).toEqual({ error: 'username required' });
   });
 
   // 2) 정상적으로 로그인/registration 되는 경우

@@ -1,4 +1,5 @@
 module.exports = {
+    // 성공 응답을 클라이언트에 전송
     success: (res, payload) => {
       const { code, message, data } = payload;
   
@@ -10,6 +11,7 @@ module.exports = {
       };
       res.status(code).json(response);
     },
+    // 실패 응답을 클라이언트에 전송
     failed: (res, payload) => {
       const { code, message, error } = payload;
   

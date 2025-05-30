@@ -2,8 +2,8 @@ const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { APP_NAME, API_VERSION } = require('./helpers/env');
-const { failed } = require('./config/response');
+const { APP_NAME, API_VERSION } = require('./config/env');
+const { failed } = require('./utils/response');
 
 require('dotenv').config();
 

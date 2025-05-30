@@ -5,7 +5,6 @@ const initInMemoryDb = require('../utils/initDB');
 const { testAPIURL } = require('../utils/constants');
 const { initUsers } = require('../utils/initUser');
 const { run } = require('../../config/db');
-const { sleep } = require('../utils/timeUtils');
 const chatRoomModel = require('../../models/chatRoom.model');
 const { inviteUsers } = require('../utils/initChatRoom');
 const chatModel = require('../../models/chat.model');

@@ -6,16 +6,16 @@ require('dotenv').config({
 
 
 const sqlite3 = require('sqlite3').verbose();
-const {DB_PATH, APP_NAME} = require('../helpers/env');
+const {DB_PATH, APP_NAME} = require('./env');
 
-
+// database 연결
 const db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
   if (err) {
     console.error('SQLITE 연결 오류:', err.message);
     process.exit(1);
   }
 });
-
+// sql 명령어 실행: CREATE, DELETE, UPDATE
 function run(sql, params = []) {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function(res,err) {
@@ -24,7 +24,7 @@ function run(sql, params = []) {
     });
   });
 }
-// 모든 행을 다 가져온다.
+// 모든 행을 SELECT
 function all(sql, params = []) {
   return new Promise((resolve,reject) => {
     db.all(sql, params, (err, rows) => {
@@ -33,7 +33,7 @@ function all(sql, params = []) {
     });
   });
 }
-// 하나만 가져온다.
+// 하나만 SELECT
 function get(sql, params = []) {
   return new Promise((resolve, reject) => {
     db.get(sql, params, (err, row) => {

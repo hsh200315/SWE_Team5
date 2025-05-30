@@ -1,7 +1,7 @@
-const { db, get, run, all } = require("../config/db");
+const { get, run, all } = require("../config/db");
 
 module.exports = {
-    // roomId에 속하는 chat을 시간 내림차순으로 가져온다.
+    // 특정 채팅방(roomId)에 속한 채팅 목록을 최신순(timestamp DESC)으로 가져옴
     chatlist: async(data) => {
         const {roomId} = data;
         try {
@@ -11,17 +11,17 @@ module.exports = {
             return new Error(err);
         }
     },
-    // 새로운 채팅을 추가한다.
-    // 이 때 새로운 체팅방도 업데이트해야 한다.
+    // 새로운 채팅을 DB에 추가하고, 해당 채팅방의 업데이트 시간을 갱신함
     addchat: async (data) => {
         const {roomId, sender, message, isPlan, mapImage} = data;
         try {
-            await run('TRANSACTION BEGIN');
-            
+            await run('BEGIN TRANSACTION');
+            // 채팅 메시지 삽입
             const result = await run(`INSERT INTO Chat(room_id, sender_id, message, is_plan, map_image) VALUES (?, ?, ?, ?, ?)`,
                 [roomId, sender, message, isPlan, mapImage]);
             
             const chatData = await get('SELECT * FROM Chat WHERE chat_id = ?', [result.id]);
+            // 해당 채팅방의 최신 업데이트 시간 갱신
             await run(
                 'UPDATE ChatRoom SET updated_at = ? WHERE room_id = ?',
                 [chatData.timestamp, roomId]
@@ -32,6 +32,7 @@ module.exports = {
             return new Error(err);
         }
     },
+    // chatId로 특정 채팅 조회
     findById: async (data) => {
         const {chatId} = data;
         try {

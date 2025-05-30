@@ -1,11 +1,11 @@
-const { SECRET_KEY, BRAVE_API_KEY } = require('../helpers/env');
+const { SECRET_KEY, BRAVE_API_KEY } = require('../config/env');
 const axios = require('axios');
 const crypto = require('crypto');
 function makeRoomId(roomId) {
     return `room-${roomId}`;
 }
 
-
+// 메시지 암호화
 function encryptMessage(plaintext) {
     if(!plaintext || plaintext == '') return '';
     const key = Buffer.from(SECRET_KEY, 'base64');
@@ -14,6 +14,7 @@ function encryptMessage(plaintext) {
     encrypted += cipher.final('base64');
     return encrypted;
 }
+// 메시지 복호화
 function decryptMessage(ciphertext) {
     if(!ciphertext || ciphertext == '') return '';
     const key = Buffer.from(SECRET_KEY, 'base64'); 

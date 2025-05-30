@@ -41,7 +41,7 @@ export default function Home() {
                         type='text'
                         placeholder="Enter Your Username"
                         style={{
-                            width: '250px',
+                            width: '18vw',
                             height: '40px',
                             padding: '8px 12px',
                             borderRadius: '5px',
@@ -54,7 +54,7 @@ export default function Home() {
                     />
                     <button
                         style={{
-                            width: '250px',
+                            width: '18vw',
                             height: '40px',
                             padding: '8px 12px',
                             borderRadius: '20px',

@@ -77,6 +77,7 @@ export default function ChatRoom() {
 						<textarea
 							rows={1}
 							style={{ maxHeight: '4.5rem' }}
+							placeholder="어디로 가고 싶으신가요? 무엇이든 물어보세요."
 							onInput={(e) => {
 								e.target.style.height = 'auto';
 								e.target.style.height = `${Math.min(e.target.scrollHeight, 72)}px`; // 72px = ~2 lines

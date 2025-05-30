@@ -2,3 +2,8 @@
 
 UI Design
 https://www.figma.com/design/ryAW4lxOg6w8ExbZHMgPBB/SWE-Group-5?node-id=0-1&p=f&t=ns6OOZkb05B5ZWo5-0
+
+Frontend
+1. frontend 경로 접속
+2. npm install package.json
+3. npm run dev

@@ -6,7 +6,7 @@ const Client    = require('socket.io-client');
 const { Server } = require('socket.io');
 const { socketAuth } = require('../../middlewares/socketIo');
 const initInMemoryDb = require('../utils/initDB');
-const { makeRoom,getUserlist, inviteUsers } = require('../utils/initChatRoom');
+const { makeRoom, inviteUsers } = require('../utils/initChatRoom');
 const { initUsers } = require('../utils/initUser');
 const listenSocket = require("../../sockets");
 let io, server, port;

@@ -1,4 +1,4 @@
-const { API_VERSION } = require("../../helpers/env");
+const { API_VERSION } = require("../../config/env");
 
 module.exports = {
     testAPIURL : `/api/${API_VERSION}`,

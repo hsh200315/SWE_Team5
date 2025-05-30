@@ -1,6 +1,6 @@
-const { success, failed } = require('../config/response');
+const { success, failed } = require('../utils/response');
 const OpenAI = require("openai");
-const { OPENAI_API_KEY, BRAVE_API_KEY } = require('../helpers/env');
+const { OPENAI_API_KEY, BRAVE_API_KEY } = require('../config/env');
 const { getSearchResult } = require('../utils/utils');
 
 

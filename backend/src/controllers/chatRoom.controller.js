@@ -1,4 +1,4 @@
-const { success, failed } = require("../config/response");
+const { success, failed } = require("../utils/response");
 const authModel = require("../models/auth.model");
 const chatRoomModel = require("../models/chatRoom.model");
 

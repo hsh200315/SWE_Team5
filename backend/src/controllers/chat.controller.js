@@ -1,5 +1,5 @@
 
-const { success, failed } = require("../config/response");
+const { success, failed } = require("../utils/response");
 const chatModel = require("../models/chat.model");
 
 module.exports = {

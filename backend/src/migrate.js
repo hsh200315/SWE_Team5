@@ -3,7 +3,7 @@ const fs   = require('fs');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
-const { DB_PATH } = require('./helpers/env');
+const { DB_PATH } = require('./config/env');
 
 (async () => {
 

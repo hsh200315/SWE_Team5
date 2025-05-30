@@ -1,6 +1,6 @@
 const { ChatOpenAI } = require("langchain/chat_models/openai");
 const { HumanMessage } = require("langchain/schema");
-const { OPENAI_API_KEY } = require('../helpers/env');
+const { OPENAI_API_KEY } = require('../config/env');
 
 
 async function streamChat({ input, chatList, onToken, onDone }) {

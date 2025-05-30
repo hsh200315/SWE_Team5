@@ -1,4 +1,4 @@
-const { SECRET_KEY, BRAVE_API_KEY } = require('../helpers/env');
+const { SECRET_KEY, BRAVE_API_KEY } = require('../config/env');
 const axios = require('axios');
 const crypto = require('crypto');
 function makeRoomId(roomId) {

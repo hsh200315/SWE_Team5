@@ -6,7 +6,7 @@ require('dotenv').config({
 
 
 const sqlite3 = require('sqlite3').verbose();
-const {DB_PATH, APP_NAME} = require('../helpers/env');
+const {DB_PATH, APP_NAME} = require('./env');
 
 
 const db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {

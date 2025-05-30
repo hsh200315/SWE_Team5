@@ -1,6 +1,6 @@
 
 const http = require('http');
-const { PORT } = require('./helpers/env');
+const { PORT } = require('./config/env');
 const app = require('./app');
 const { initializeDB } = require('./config/db');
 require('dotenv').config();

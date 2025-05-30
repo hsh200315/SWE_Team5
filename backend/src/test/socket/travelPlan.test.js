@@ -45,13 +45,17 @@ afterAll(async () => {
   await io.close();
   await new Promise(resolve => server.close(resolve));
 });
-describe('socket chat test', () => {
-  test("AI 응답이 chatMsg를 통해 토큰 단위로 수신되는지", (done) => {
+
+
+describe("travel_plan AI 스트리밍 테스트", () => {
+  test("여러 유저가 travel_plan, coordinate 이벤트를 정상 수신하는지", (done) => {
     const aliceTokens = [];
     const bobTokens = [];
+    const aliceCoordinates = [];
+    const bobCoordinates = [];
+
     let aliceDone = false;
     let bobDone = false;
-    const input = "안녕 GPT야 너에 대해서 소개해줘";
 
     (async () => {
       const chat1 = await chatModel.addchat({
@@ -80,43 +84,56 @@ describe('socket chat test', () => {
         auth: { username: receiver, roomId: room.room_id }
       });
 
-      function handleToken(user, tokenArray, data) {
-        //console.log(`${user} 받은 토큰:`, data.message);
-        tokenArray.push(data.message);
-      }
-
       function handleDone() {
         if (aliceDone && bobDone) {
-          const aText = aliceTokens.join('');
-          const bText = bobTokens.join('');
-          //console.log("최종 Alice 응답:", aText);
-          //console.log("최종 Bob 응답:", bText);
-          expect(aText).toBe(bText);
-          expect(aText.length).toBeGreaterThan(0);
-          done();
+            const aliceText = aliceTokens.join('');
+            const bobText = bobTokens.join('');
+            //console.log(bobText);
+
+            expect(aliceText).toBe(bobText);
+            expect(aliceText.length).toBeGreaterThan(0);
+            //console.log(bobCoordinates);
+
+            const aliceCoords = JSON.parse(aliceCoordinates[0].message);
+            const bobCoords = JSON.parse(bobCoordinates[0].message);
+
+            expect(Array.isArray(aliceCoords)).toBe(true);
+            expect(aliceCoords.length).toBe(3);
+            expect(aliceCoords).toEqual(bobCoords);
+
+            done();
         }
       }
 
-      aliceSocket.on("AI_chat", (data) => handleToken("Alice", aliceTokens, data));
-      bobSocket.on("AI_chat", (data) => handleToken("Bob", bobTokens, data));
+      // 이벤트 등록 - travel_plan
+      aliceSocket.on("travel_plan", (data) => {
+        aliceTokens.push(data.message);
+      });
 
-      aliceSocket.on("AI_chat_done", () => {
+      bobSocket.on("travel_plan", (data) => {
+        bobTokens.push(data.message);
+      });
+
+      // 이벤트 등록 - coordinate
+      aliceSocket.on("coordinate", (data) => {
+        aliceCoordinates.push(data);
         aliceDone = true;
         handleDone();
       });
 
-      bobSocket.on("AI_chat_done", () => {
+      bobSocket.on("coordinate", (data) => {
+        bobCoordinates.push(data);
         bobDone = true;
         handleDone();
       });
 
+      // 3️⃣ 소켓 연결 후 요청 emit
       aliceSocket.on('connect', () => {
-        aliceSocket.emit("chatMsg", {
-          msg: input,
-          toAI: true,
+        aliceSocket.emit("travel_plan", {
           chatHistory: chatHistory
         });
       });
+
     })();
   }, 10000);
 });

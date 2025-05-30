@@ -40,5 +40,13 @@ module.exports = {
         } catch(err) {
             return new Error(err);
         }
+    },
+    updateMessage: async ({ chat_id, message }) => {
+        try {
+            await run("UPDATE Chat SET message = ? WHERE chat_id = ?", [message, chat_id]);
+            return true;
+        } catch (err) {
+            return new Error(err);
+        }
     }
 }

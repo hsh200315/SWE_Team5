@@ -58,7 +58,6 @@ describe('chatroom API', () => {
       .send({username: username, roomname:roomname});
     expect(res.statusCode).toBe(201);
     expect(res.body.data.roomId).toEqual(1);
-    expect(res.body.data.owner).toEqual(username);
     expect(res.body.data.roomname).toEqual(roomname);
     expect(res.body.data.updated_at).toBeDefined();
   });

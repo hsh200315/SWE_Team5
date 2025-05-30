@@ -25,7 +25,7 @@ module.exports = {
             return success(res, {
                 code: 201,
                 message: 'Success make room',
-                data: {roomId: result.room_id, owner: result.owner_id, roomname: result.room_name, updated_at: result.updated_at}
+                data: {roomId: result.room_id, roomname: result.room_name, updated_at: result.updated_at}
             });
         } catch(err) {
             return failed(res, {

@@ -83,7 +83,7 @@ describe('socket chat test', () => {
         });
         const chat = 'hello';
         senderSocket.on('connect', () => {
-            senderSocket.emit('chatMsg', chat);
+            senderSocket.emit('chatMsg', {msg: chat, toAI: false, chatHistory: []});
         });
 
         notReceiverSocket.on('chatMsg', () => {

@@ -33,14 +33,14 @@ describe('Chat API', () => {
             roomId: room.room_id,
             sender: alice,
             message: 'first',
-            isFromAI: false,
+            isPlan: false,
             mapImage: null
         };
         const chat2 = {
             roomId: room.room_id,
             sender: bob,
             message: 'second',
-            isFromAI: false,
+            isPlan: false,
             mapImage: null
         };
         await chatModel.addchat(chat1);

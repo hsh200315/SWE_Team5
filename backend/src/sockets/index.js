@@ -6,16 +6,21 @@ const { makeRoomId } = require('../utils/utils');
 
 
 module.exports = (io, socket) => {
-    socket.on('chatMsg',async (msg) => {
+    // toAI: AI에게 질문할 것인지.
+    // history: 이전 chatting들의 ID
+    socket.on('chatMsg',async (data) => {
         // db에 먼저 저장한다. 만약 db에 저장이 안되면 error를 반환한다.
-
+        const {msg, toAI, chatHistory} = data;
         const roomId = socket.roomId;
         const username = socket.username;
         try {
-            const chat = await chatModel.addchat({roomId: roomId, sender: username, message: msg, isFromAI: false, mapImage: null});
+            const chat = await chatModel.addchat({roomId: roomId, sender: username, message: msg, isPlan: false, mapImage: null});
             io.to(makeRoomId(roomId)).emit('chatMsg', chat);
         } catch {
             socket.emit("server-error", {message: "msg is not sent because of server error."});
+        }
+        if(toAI) {
+            
         }
     });
     socket.on('invite', async (data) => {

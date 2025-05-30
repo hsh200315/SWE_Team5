@@ -31,7 +31,7 @@ describe('chatroom table test', () => {
         const result = await chatRoomModel.create({username: username, roomname: roomname});
         expect(result.room_id).toBe(1);
         expect(result.room_name).toBe(roomname);
-        expect(result.owner_id).toBe(username);
+        
     }),
     test('invite user', async() => {
         

@@ -1,4 +1,4 @@
-const { db, run, get } = require("../config/db");
+const { run, get } = require("../config/db");
 
 module.exports = {
     register: async (data) => {

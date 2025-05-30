@@ -21,6 +21,7 @@ app.get('/',(req,res) => {
     res.send(APP_NAME);
 });
 
+
 const API_URL = `/api/${API_VERSION}`;
 
 app.use(API_URL, require('./routes/auth.route'));

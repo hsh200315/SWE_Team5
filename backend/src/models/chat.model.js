@@ -14,12 +14,12 @@ module.exports = {
     // 새로운 채팅을 추가한다.
     // 이 때 새로운 체팅방도 업데이트해야 한다.
     addchat: async (data) => {
-        const {roomId, sender, message, isFromAI, mapImage} = data;
+        const {roomId, sender, message, isPlan, mapImage} = data;
         try {
             await run('TRANSACTION BEGIN');
             
-            const result = await run(`INSERT INTO Chat(room_id, sender_id, message, is_from_AI, map_image) VALUES (?, ?, ?, ?, ?)`,
-                [roomId, sender, message, isFromAI, mapImage]);
+            const result = await run(`INSERT INTO Chat(room_id, sender_id, message, is_plan, map_image) VALUES (?, ?, ?, ?, ?)`,
+                [roomId, sender, message, isPlan, mapImage]);
             
             const chatData = await get('SELECT * FROM Chat WHERE chat_id = ?', [result.id]);
             await run(
@@ -31,6 +31,14 @@ module.exports = {
         } catch(err) {
             return new Error(err);
         }
+    },
+    findById: async (data) => {
+        const {chatId} = data;
+        try {
+            const result = await get("SELECT * FROM Chat WHERE chat_id = ?",[chatId]);
+            return result;
+        } catch(err) {
+            return new Error(err);
+        }
     }
-    
 }

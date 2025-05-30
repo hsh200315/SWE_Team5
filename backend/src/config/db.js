@@ -6,7 +6,8 @@ require('dotenv').config({
 
 
 const sqlite3 = require('sqlite3').verbose();
-const {DB_PATH} = require('../helpers/env')
+const {DB_PATH} = require('../helpers/env');
+const { register } = require('../models/auth.model');
 
 
 const db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
@@ -44,9 +45,14 @@ function get(sql, params = []) {
   });
 }
 
+async function initializeDB() {
+    await register({username: APP_NAME});    
+}
+
 module.exports = {
   db,
   run,
   all,
   get,
+  initializeDB
 };

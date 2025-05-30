@@ -41,7 +41,7 @@ describe('User table test', () => {
             roomId: aliceRoom.room_id,
             sender: alice,
             message: 'hello bob!',
-            isFromAI: false,
+            isPlan: false,
             mapImage: null
         }
         // 챗 개수가 1이고
@@ -58,14 +58,14 @@ describe('User table test', () => {
             roomId: room.room_id,
             sender: alice,
             message: 'first',
-            isFromAI: false,
+            isPlan: false,
             mapImage: null
         };
         const chat2 = {
             roomId: room.room_id,
             sender: alice,
             message: 'second',
-            isFromAI: false,
+            isPlan: false,
             mapImage: null
         };
         const first = await chatModel.addchat(chat1);

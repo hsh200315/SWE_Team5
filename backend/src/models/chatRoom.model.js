@@ -29,10 +29,10 @@ module.exports = {
         const {username, roomname} = data;
         try {
             await run('BEGIN TRANSACTION');
-            const chatRoom = await run('INSERT INTO ChatRoom (room_name, owner_id) VALUES (?, ?)', [roomname, username]);
+            const chatRoom = await run('INSERT INTO ChatRoom (room_name) VALUES (?)', [roomname]);
             await run('INSERT INTO ChatRoomUser (room_id, user_id) VALUES (?, ?)', [chatRoom.id, username]);
             await run('COMMIT');
-            const result = await get('SELECT room_id, room_name, owner_id, updated_at FROM ChatRoom WHERE room_id = ?',[chatRoom.id]);
+            const result = await get('SELECT room_id, room_name, updated_at FROM ChatRoom WHERE room_id = ?',[chatRoom.id]);
             return result;
         } catch (err) {
             return new Error(err);

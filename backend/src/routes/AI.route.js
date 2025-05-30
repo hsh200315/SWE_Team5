@@ -4,5 +4,5 @@ const { promptGeneration, questionParsing } = require('../controllers/AI.control
 const router = express.Router();
 
 router.post('/ai/prompt-generation', promptGeneration);
-//router.post('/ai/ai-test', questionParsing);
+router.post('/ai/ai-test', questionParsing);
 module.exports = router;

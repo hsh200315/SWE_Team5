@@ -6,8 +6,7 @@ require('dotenv').config({
 
 
 const sqlite3 = require('sqlite3').verbose();
-const {DB_PATH} = require('../helpers/env');
-const { register } = require('../models/auth.model');
+const {DB_PATH, APP_NAME} = require('../helpers/env');
 
 
 const db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
@@ -15,7 +14,6 @@ const db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE | sqlite3.OPEN_C
     console.error('SQLITE 연결 오류:', err.message);
     process.exit(1);
   }
-  //console.log('✅ SQLite DB 연결됨:', DB_PATH);
 });
 
 function run(sql, params = []) {
@@ -46,7 +44,8 @@ function get(sql, params = []) {
 }
 
 async function initializeDB() {
-    await register({username: APP_NAME});    
+  const isExistAI = await get("SELECT * FROM User WHERE user_id=?", [APP_NAME]);
+  if(!isExistAI) await run('INSERT INTO User(user_id) VALUES(?)', APP_NAME);
 }
 
 module.exports = {

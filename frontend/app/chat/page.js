@@ -8,6 +8,8 @@ import { GoCpu, GoPencil, GoFile, GoSearch, GoCheckCircle, GoPaperAirplane } fro
 export default function ChatRoom() {
 
 	const [username, setUsername] = useState('');
+	const [roomList, SetRoomList] = useState([]);
+
 	const [buttonOnOff, SetButtonOnOff] = useState([false, false, false, false, false]);
 	const [modalOnOff, SetModalOnOff] = useState(false)
 	const [chatChecked, SetChatChecked] = useState(false)
@@ -33,7 +35,6 @@ export default function ChatRoom() {
 	
 
 	const GetChat = async() => {
-		console.log(username)
 		try {
 			const response = await fetch('http://localhost:4000/api/v1/roomlist', {
 				method: 'POST',
@@ -47,7 +48,7 @@ export default function ChatRoom() {
 				console.error('Failed to fetch rooms:', data);
 				return;
 			}
-			console.log('Fetched rooms:', data.data);
+			SetRoomList(data.data);
 		} catch (error) {
 			console.error('Error fetching chat rooms:', error);
 		}
@@ -80,7 +81,7 @@ export default function ChatRoom() {
 
 			{/* 사이드바 */}
 			<div className="h-full w-1/7">
-				<Sidebar />
+				<Sidebar chatRooms={roomList} username={username}/>
 			</div>
 			
 

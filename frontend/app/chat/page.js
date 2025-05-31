@@ -14,8 +14,6 @@ export default function ChatRoom() {
 	const [modalOnOff, SetModalOnOff] = useState(false)
 	const [chatChecked, SetChatChecked] = useState(false)
 	const chatRef = useRef(null);
-	const ModalRef = useRef(null);
-
 
 	useEffect(() => {
 		if (typeof window !== 'undefined') {
@@ -25,16 +23,21 @@ export default function ChatRoom() {
 				setUsername(storedUser);
 			}
 		}
+		if (chatRef.current) {
+			chatRef.current.scrollTo({
+			top: chatRef.current.scrollHeight,
+			behavior: "smooth"});
+		}
 	}, []);
 
 	useEffect(() => {
 		if(username === '') return;
-		GetChat()
+		GetRoomList()
 	}, [username]);
 
 	
 
-	const GetChat = async() => {
+	const GetRoomList = async() => {
 		try {
 			const response = await fetch('http://localhost:4000/api/v1/roomlist', {
 				method: 'POST',
@@ -54,20 +57,7 @@ export default function ChatRoom() {
 			console.error('Error fetching chat rooms:', error);
 		}
 	}
-	
 
-	useEffect(() => {
-		if (chatRef.current) {
-			chatRef.current.scrollTo({
-			top: chatRef.current.scrollHeight,
-			behavior: "smooth"});
-		}
-		if (ModalRef.current) {
-			ModalRef.current.scrollTo({
-			top: ModalRef.current.scrollHeight,
-			behavior: "smooth"});
-		}
-	}, []);
 
 	return (
 		<div className="flex h-screen">
@@ -75,7 +65,6 @@ export default function ChatRoom() {
 			<CheckModal 
 				modalOnOff={modalOnOff}
 				SetModalOnOff={SetModalOnOff}
-				ModalRef={ModalRef}
 				chatChecked={chatChecked}
 				SetChatChecked={SetChatChecked}/>
 
@@ -222,17 +211,11 @@ function ButtonList({ SetButtonOnOff, buttonOnOff, SetModalOnOff, chatChecked })
 	)
 }
 
-function CheckModal({modalOnOff, SetModalOnOff, ModalRef, chatChecked, SetChatChecked}){
+function CheckModal({modalOnOff, SetModalOnOff, chatChecked, SetChatChecked}){
 	function ClickEvent(){
 		SetChatChecked(!chatChecked)
 		SetModalOnOff(!modalOnOff)
 	}
-	
-	useEffect(() => {
-		if (modalOnOff && ModalRef?.current) {
-			ModalRef.current.scrollTop = ModalRef.current.scrollHeight;
-		}
-	}, [modalOnOff]);
 
 	return(
 		<ReactModal
@@ -281,8 +264,8 @@ function CheckModal({modalOnOff, SetModalOnOff, ModalRef, chatChecked, SetChatCh
 			</div>
 			
 
-		  {/* Chat content area */}
-		  <div ref={ModalRef} className="flex-1 overflow-y-auto border-none rounded bg-gray-100 p-3 space-y-2">
+		{/* Chat content area */}
+		<div className="flex-1 overflow-y-auto border-none rounded bg-gray-100 p-3 space-y-2">
 			<ChatBubbleMine>우리 중강하면 어디로</ChatBubbleMine>
 			<ChatBubbleOther name="중현">저번에 말했던 영국 런던은 어때?</ChatBubbleOther>
 			<ChatBubbleOther name="주호">거기 가면 뭐함?</ChatBubbleOther>
@@ -291,7 +274,7 @@ function CheckModal({modalOnOff, SetModalOnOff, ModalRef, chatChecked, SetChatCh
 			<ChatBubbleOther name="중현">저번에 말했던 영국 런던은 어때?</ChatBubbleOther>
 			<ChatBubbleOther name="주호">거기 가면 뭐함?</ChatBubbleOther>
 			<ChatBubbleOther name="중현">몰루? 학주가 제안함</ChatBubbleOther>
-		  </div>
+		</div>
 
 		  {/* Footer Button */}
 		  <div className="mt-4 flex justify-end">

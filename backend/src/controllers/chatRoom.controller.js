@@ -29,7 +29,7 @@ module.exports = {
             return success(res, {
                 code: 201,
                 message: 'Success make room',
-                data: {roomId: room.room_id, roomname: room.room_name, updated_at: room.updated_at, successUserlist: successUserlist, failUserlist: failUserlist}
+                data: {room_id: room.room_id, room_name: room.room_name, updated_at: room.updated_at, successUserlist: successUserlist, failUserlist: failUserlist}
             });
         } catch(err) {
             return failed(res, {

@@ -1,7 +1,7 @@
 
 const chatRoomModel = require("../../models/chatRoom.model");
 const chatModel = require("../../models/chat.model");
-const { inviteUsers } = require("../utils/initChatRoom");
+const { inviteUsers, makeRoom } = require("../utils/initChatRoom");
 const initInMemoryDb = require("../utils/initDB");
 const { initUsers } = require("../utils/initUser");
 const { run } = require("../../config/db");
@@ -17,17 +17,14 @@ beforeAll(async () => {
     // aliceRoom:[alice, bob], bobRoom:[bob, charil], charilRoom:[charil, alice] 방을 만든다.
     await initUsers(usernames);
     
-    aliceRoom = await chatRoomModel.create({username: alice, roomname: `${alice}Room`});
-    bobRoom = await chatRoomModel.create({username: bob, roomname: `${bob}Room`});
-    charilRoom = await chatRoomModel.create({username: charil, roomname: `${charil}Room`});
+    aliceRoom = await makeRoom(alice, `${alice}Room`);
+    bobRoom = await makeRoom(bob,`${bob}Room`);
+    charilRoom = await makeRoom(charil,`${charil}Room`);
     await inviteUsers(aliceRoom.room_id, [bob]);
     await inviteUsers(bobRoom.room_id, [charil]);
     await inviteUsers(charilRoom.room_id, [alice]);
 });
-  
-afterAll(async () => {
-    await db.close();
-});
+
 
 beforeEach(async() => {
     await run('DELETE FROM Chat');
@@ -36,7 +33,7 @@ beforeEach(async() => {
 
 describe('User table test', () => {
     test('send chat', async() => {
-        // alice가 톡방에 chat을 올리고,
+        
         const chat = {
             roomId: aliceRoom.room_id,
             sender: alice,
@@ -44,9 +41,9 @@ describe('User table test', () => {
             isPlan: false,
             mapImage: null
         }
-        // 챗 개수가 1이고
+       
         const result = await chatModel.addchat(chat);
-        // 챗 내용과 sender와 room_id가 같은지
+        
         expect(result.room_id).toBe(chat.roomId);
         expect(result.sender_id).toBe(chat.sender);
         expect(result.message).toBe(chat.message);

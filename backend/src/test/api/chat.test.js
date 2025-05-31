@@ -19,10 +19,6 @@ beforeAll(async() => {
     await inviteUsers(room.room_id, [bob]);
 });
 
-beforeEach(async () => {
-    //await run('DELETE FROM ChatRoomUser');
-    //await run('DELETE FROM ChatRoom');
-});
 
 describe('Chat API', () => {
     // 1. chatting을 시간 역순으로 가져온다.
@@ -50,7 +46,6 @@ describe('Chat API', () => {
         const res = await request(app)
         .get(`${testAPIURL}/rooms/${room.room_id}/messages`);
         // api를 통해 가져외서 개수가 2개인지 확인한다.
-        
         expect(res.body.data.length).toBe(2);
        
     });

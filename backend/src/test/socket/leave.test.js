@@ -6,10 +6,12 @@ const initInMemoryDb = require('../utils/initDB');
 const { makeRoom,getUserlist, inviteUsers } = require('../utils/initChatRoom');
 const { initUsers } = require('../utils/initUser');
 const listenSocket = require("../../sockets");
+// 테스트에 필요한 전역변수들
 let io, server, port;
 let inviterSocket, leaverSocket;
 const inviter = 'alice';
 const leaver = 'bob';
+const notInviter = 'charil'
 const roomname = 'testroom';
 let room;
 // 1. setup
@@ -18,12 +20,13 @@ beforeAll(async () => {
     io = new Server(server, {
         transports: ['polling','websocket']
     });
+    // 초기 설정
     await initInMemoryDb();
-    await initUsers([inviter, leaver]);
-    // inviter가 방을 만든다.
+    await initUsers([inviter, leaver,notInviter]);
     room = await makeRoom(inviter, roomname);
     await inviteUsers(room.room_id, [leaver]);
     socketAuth(io);
+
     io.on('connection', (socket) => {
         listenSocket(io, socket);
     });
@@ -55,11 +58,10 @@ afterEach(() => {
         leaverSocket.disconnect();
     }
 });
-// 2. 존재하지 않는 User 초대
 
 describe('socket invite test', () => {
-    // 1. 정상적으로 떠나는 경우
-    test("leave user", done => {
+    // 1. 정상적으로 떠나는 경우.
+    test("leave unexisted user", done => {
         inviterSocket = new Client(`http://localhost:${port}`, {
             auth: { username: inviter, roomId: room.room_id }
         });
@@ -74,8 +76,9 @@ describe('socket invite test', () => {
             expect(data.username).toBe(leaver);
             const userlist = await getUserlist(room.room_id);
             expect(userlist.length).toBe(1);
-            
             done();
         });
     });
+    
+    
 });

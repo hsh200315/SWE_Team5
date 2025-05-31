@@ -6,6 +6,7 @@ const initInMemoryDb = require('../utils/initDB');
 const { makeRoom,getUserlist, inviteUsers } = require('../utils/initChatRoom');
 const { initUsers } = require('../utils/initUser');
 const listenSocket = require("../../sockets");
+// 테스트에 필요한 전역변수들
 let io, server, port;
 let inviterSocket, inviteeSocket ;
 const inviter = 'alice';
@@ -20,7 +21,6 @@ beforeAll(async () => {
     });
     await initInMemoryDb();
     await initUsers([inviter, invitee]);
-    // inviter가 방을 만든다.
     room = await makeRoom(inviter,roomname);
    
     socketAuth(io);
@@ -77,6 +77,7 @@ describe('socket invite test', () => {
         inviterSocket = new Client(`http://localhost:${port}`, {
             auth: { username: inviter, roomId: room.room_id }
         });
+
         inviterSocket.on('connect', () => {
             inviterSocket.emit('invite', {inviteUsername: unExistedUsername});
         });
@@ -108,6 +109,7 @@ describe('socket invite test', () => {
         inviterSocket.on('connect', () => {
             inviterSocket.emit('invite', {inviteUsername: username});
         });
+        
         inviterSocket.on('invite', async (data) => {
             expect(data.username).toBe(username);
             const userlist = await getUserlist(room.room_id);

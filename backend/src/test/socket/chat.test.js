@@ -24,11 +24,8 @@ beforeAll(async () => {
     });
     await initInMemoryDb();
     await initUsers([sender, receiver, notReceiver]);
-    // sender가 방을 만든다.
     room = await makeRoom(sender,roomname);
-    
     await inviteUsers(room.room_id, [receiver]);
-    // 방을 하나 더 만들어서 다른 방에는 메시지가 가지 않는지 확인한다.
     notreceiveRoom = await makeRoom(notReceiver,"notreceiveRoom");
     socketAuth(io);
     io.on('connection', (socket) => {
@@ -43,7 +40,6 @@ beforeAll(async () => {
     });
 });
 afterAll(async () => {
-    // 4) 정리
     if (senderSocket && senderSocket.connected) {
         senderSocket.disconnect();
     }
@@ -86,11 +82,11 @@ describe('socket chat test', () => {
         senderSocket.on('connect', () => {
             senderSocket.emit('chatMsg', {msg: chat, toAI: false, chatHistory: []});
         });
-
+        // 다른 방에는 채팅이 가지 않는지 확인
         notReceiverSocket.on('chatMsg', () => {
             done().fail(new Error('not receiver should not receive msg.'));
         });
-
+        // 해당 방에는 채팅이 정상적으로 갔는지 확인
         receiverSocket.on('chatMsg', (data) => {
             expect(data.room_id).toBe(room.room_id);
             expect(data.sender_id).toBe(sender);

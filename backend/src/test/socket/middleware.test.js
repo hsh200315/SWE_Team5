@@ -48,9 +48,10 @@ afterEach(() => {
 });
 
 describe('socket middleware test', () => {
+    // 1. username이 없는 경우
     test("connect without username", done => {
         clientSocket = new Client(`http://localhost:${port}`, {
-            auth: { username: 'alice' }  // roomId 빠짐
+            auth: { username: 'alice' } 
         });
       
         clientSocket.on('connect_error', err => {
@@ -58,10 +59,10 @@ describe('socket middleware test', () => {
             done();
         });
     });
-
+    // roomId가 없는 경우
     test("connect without roomname", done => {
         clientSocket = new Client(`http://localhost:${port}`, {
-            auth: { roomId: room.room_id }  // roomId 빠짐
+            auth: { roomId: room.room_id } 
         });
       
         clientSocket.on('connect_error', err => {
@@ -70,11 +71,11 @@ describe('socket middleware test', () => {
         });
     });
 
-    // 해당 방에 사용자가 존재하지 않을 경우 error 발생
+    // 해당 방에 사용자가 존재하지 않을 경우
     test("connect not join user", done => {
         const notUser = 'bob';
         clientSocket = new Client(`http://localhost:${port}`, {
-            auth: {username: notUser ,roomId: room.room_id }  // roomId 빠짐
+            auth: {username: notUser ,roomId: room.room_id }  
         });
       
         clientSocket.on('connect_error', err => {

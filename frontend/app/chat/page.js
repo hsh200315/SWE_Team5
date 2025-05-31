@@ -7,18 +7,52 @@ import { GoCpu, GoPencil, GoFile, GoSearch, GoCheckCircle, GoPaperAirplane } fro
 
 export default function ChatRoom() {
 
-	useEffect(() => {
-		if (typeof window !== "undefined") {
-			ReactModal.setAppElement("body");
-		}
-	}, []);
-
-
+	const [username, setUsername] = useState('');
 	const [buttonOnOff, SetButtonOnOff] = useState([false, false, false, false, false]);
 	const [modalOnOff, SetModalOnOff] = useState(false)
 	const [chatChecked, SetChatChecked] = useState(false)
 	const chatRef = useRef(null);
 	const ModalRef = useRef(null);
+
+
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			ReactModal.setAppElement("body");
+			const storedUser = sessionStorage.getItem('username');
+			if (storedUser) {
+				setUsername(storedUser);
+			}
+		}
+	}, []);
+
+	useEffect(() => {
+		if(username === '') return;
+		GetChat()
+	}, [username]);
+
+	
+
+	const GetChat = async() => {
+		console.log(username)
+		try {
+			const response = await fetch('http://localhost:4000/api/v1/roomlist', {
+				method: 'POST',
+				headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username })
+			});
+			const data = await response.json();
+			if (!response.ok) {
+				console.error('Failed to fetch rooms:', data);
+				return;
+			}
+			console.log('Fetched rooms:', data.data);
+		} catch (error) {
+			console.error('Error fetching chat rooms:', error);
+		}
+	}
+	
 
 	useEffect(() => {
 		if (chatRef.current) {

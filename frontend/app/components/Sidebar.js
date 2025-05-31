@@ -5,26 +5,33 @@ import { AiOutlineUserAdd, AiOutlineUserDelete } from 'react-icons/ai';
 
 import logo_blue from '../../public/logo_blue.png';
 
-export default function Sidebar({ chatRooms, username }) {
+export default function Sidebar({ roomList, SetRoomList, username }) {
 
+	const [inviteUsername, SetInviteUsername] = useState('');
+	const [invitedUsers, SetInvitedUsers] = useState([]);
 	const [modalOnOff, SetModalOnOff] = useState(false)
 	const [newRoomName, SetNewRoomName] = useState('')
 
 	const CreateNewRoom = async() => {
 		try {
+			const userList = [...invitedUsers, username]
 			const response = await fetch('http://localhost:4000/api/v1/rooms', {
 				method: 'POST',
 				headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ newRoomName })
+                body: JSON.stringify({ "roomname":newRoomName, "userlist":userList })
 			});
 			const data = await response.json();
 			if (!response.ok) {
 				console.error('Failed to fetch rooms:', data);
 				return;
 			}
-			SetRoomList(data.data);
+			SetRoomList(prev => [
+				...prev,
+				{ roomId: data.data.roomId, roomname: data.data.roomname }
+			]);
+			console.log(data)
 		} catch (error) {
 			console.error('Error fetching chat rooms:', error);
 		}
@@ -33,7 +40,18 @@ export default function Sidebar({ chatRooms, username }) {
 	return (
 		<div style={{width: '100%', backgroundColor:'#84CDEE', height: '100vh'}}>
 
-			<CreateRoomModal modalOnOff={modalOnOff} SetModalOnOff={SetModalOnOff} newRoomName={newRoomName} SetNewRoomName={SetNewRoomName}/>
+			<CreateRoomModal 
+				modalOnOff={modalOnOff}
+				SetModalOnOff={SetModalOnOff}
+				newRoomName={newRoomName}
+				SetNewRoomName={SetNewRoomName}
+				inviteUsername={inviteUsername}
+				SetInviteUsername={SetInviteUsername}
+				invitedUsers={invitedUsers}
+				SetInvitedUsers={SetInvitedUsers}
+				CreateNewRoom={CreateNewRoom}
+				username={username}
+			/>
 			<div style={{width: '100%', height:'15%'}} className='flex flex-row items-center text-white'>
 				<Image
 					src={logo_blue}
@@ -49,10 +67,10 @@ export default function Sidebar({ chatRooms, username }) {
 				<div className='text-white bold mb-[3%]'>
 					CHATROOMS
 				</div>
-				{chatRooms.map((idx)=> {
+				{roomList.map((idx)=> {
 					return (
-						<div key={idx.roomId} style={{borderRadius:"6px"}} className='flex flex-row bg-white py-[5%] px-[7%]'>
-							{idx.roomname}
+						<div key={idx.room_id} style={{borderRadius:"6px"}} className='flex flex-row bg-white py-[5%] px-[7%]'>
+							{idx.room_name}
 						</div>
 					)
 				})}
@@ -77,24 +95,24 @@ export default function Sidebar({ chatRooms, username }) {
 }
 
 
-function CreateRoomModal({modalOnOff, SetModalOnOff, newRoomName, SetNewRoomName}){
-	const [inviteUsername, setInviteUsername] = useState('');
-	const [invitedUsers, setInvitedUsers] = useState([]);
-
+function CreateRoomModal({modalOnOff, SetModalOnOff, newRoomName, SetNewRoomName, inviteUsername, SetInviteUsername, invitedUsers, SetInvitedUsers, CreateNewRoom, username}) {
 	const addUser = () => {
 		const trimmedName = inviteUsername.trim();
 		if(trimmedName && !invitedUsers.includes(trimmedName)){
-			setInvitedUsers([...invitedUsers, trimmedName]);
-			setInviteUsername('');
+			SetInvitedUsers([...invitedUsers, trimmedName]);
+			SetInviteUsername('');
 		}
 	};
 
 	const removeUser = (name) => {
-		setInvitedUsers(invitedUsers.filter(user => user !== name));
+		SetInvitedUsers(invitedUsers.filter(user => user !== name));
 	};
 
 	const handleApply = () => {
 		SetModalOnOff(false);
+		console.log("방 이름:", newRoomName);
+		console.log("초대된 유저:", invitedUsers);
+		CreateNewRoom();
 	};
 
 	return(
@@ -146,7 +164,7 @@ function CreateRoomModal({modalOnOff, SetModalOnOff, newRoomName, SetNewRoomName
 					<input
 						type="text"
 						value={inviteUsername}
-						onChange={(e) => setInviteUsername(e.target.value)}
+						onChange={(e) => SetInviteUsername(e.target.value)}
 						placeholder="유저 이름 입력"
 						className="border border-gray-300 rounded-md px-4 py-2 w-full pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
 						onKeyDown={(e) => { if(e.key === 'Enter'){ e.preventDefault(); addUser(); } }}
@@ -185,9 +203,10 @@ function CreateRoomModal({modalOnOff, SetModalOnOff, newRoomName, SetNewRoomName
 
 				<button
 					onClick={handleApply}
-					className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-md transition-colors"
+					style={{backgroundColor:"#11B8FF"}}
+					className="hover:bg-blue-600 text-white font-semibold py-3 rounded-md transition-colors"
 				>
-					적용하기
+					생성하기
 				</button>
 			</div>
 		</ReactModal>

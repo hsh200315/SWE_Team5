@@ -48,6 +48,7 @@ export default function ChatRoom() {
 				console.error('Failed to fetch rooms:', data);
 				return;
 			}
+			console.log(data.data);
 			SetRoomList(data.data);
 		} catch (error) {
 			console.error('Error fetching chat rooms:', error);
@@ -70,7 +71,6 @@ export default function ChatRoom() {
 
 	return (
 		<div className="flex h-screen">
-			
 			{/* 모달창 */}
 			<CheckModal 
 				modalOnOff={modalOnOff}
@@ -81,7 +81,7 @@ export default function ChatRoom() {
 
 			{/* 사이드바 */}
 			<div className="h-full w-1/7">
-				<Sidebar chatRooms={roomList} username={username}/>
+				<Sidebar roomList={roomList} SetRoomList={SetRoomList} username={username}/>
 			</div>
 			
 

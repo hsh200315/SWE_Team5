@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export default function Home() {
     const router = useRouter();
-    const [username, setUsername] = useState('');
+    const [username, setUsername] = useState('Sena');
 
     const OnClickEvent = async() => {
         if (!username.trim()) {

@@ -6,7 +6,7 @@ const router = express.Router();
 
 router
     .post('/rooms', createRoom)
-    .get('/rooms', getRoomList)
+    .post('/roomlist', getRoomList)
     .get('/rooms/:id/users', getUserList)
     .get('/rooms/:id/messages', getChatList);
 

@@ -45,6 +45,7 @@ function get(sql, params = []) {
 
 async function initializeDB() {
   await run('PRAGMA foreign_keys = ON');
+  
   const isExistAI = await get("SELECT * FROM User WHERE user_id=?", [APP_NAME]);
   if(!isExistAI) await run('INSERT INTO User(user_id) VALUES(?)', APP_NAME);
   

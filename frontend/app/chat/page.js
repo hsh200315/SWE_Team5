@@ -8,7 +8,9 @@ import { GoCpu, GoPencil, GoFile, GoSearch, GoCheckCircle, GoPaperAirplane } fro
 export default function ChatRoom() {
 
 	const [username, setUsername] = useState('');
+	const [chatList, SetChatList] = useState([]);
 	const [roomList, SetRoomList] = useState([]);
+	const [selectedRoom, SetSelectedRoom] = useState(0);
 
 	const [buttonOnOff, SetButtonOnOff] = useState([false, false, false, false, false]);
 	const [modalOnOff, SetModalOnOff] = useState(false)
@@ -35,7 +37,12 @@ export default function ChatRoom() {
 		GetRoomList()
 	}, [username]);
 
-	
+	useEffect(() => {
+		console.log("selectedRoom", selectedRoom);
+		if (selectedRoom !== 0) {
+			GetChat();
+		}
+	}, [selectedRoom]);
 
 	const GetRoomList = async() => {
 		try {
@@ -58,6 +65,23 @@ export default function ChatRoom() {
 		}
 	}
 
+	const GetChat = async() => {
+		try {
+			const response = await fetch(`http://localhost:4000/api/v1/rooms/${selectedRoom}/messages`, {
+				method: 'GET',
+			});
+			const data = await response.json();
+			if (!response.ok) {
+				console.error('Failed to fetch chat:', data);
+				return;
+			}
+			console.log(data.data);
+			SetChatList(data.data);
+		} catch (error) {
+			console.error('Error fetching chat rooms:', error);
+		}
+	}
+
 
 	return (
 		<div className="flex h-screen">
@@ -70,33 +94,32 @@ export default function ChatRoom() {
 
 			{/* 사이드바 */}
 			<div className="h-full w-1/7">
-				<Sidebar roomList={roomList} SetRoomList={SetRoomList} username={username}/>
+				<Sidebar
+					roomList={roomList}
+					SetRoomList={SetRoomList}
+					selectedRoom={selectedRoom}
+					SetSelectedRoom={SetSelectedRoom}
+					username={username}
+				/>
 			</div>
 			
 
 			{/* 채팅창 */}
 			<main className="flex-1 bg-white pt-[7vh] pb-[20vh] px-[15vw] w-6/7">
 				<div ref={chatRef} className="space-y-2 w-[100%] h-[100%] overflow-y-auto">
-					<ChatBubbleMine>우리 중간 보고 어디 놀러갈래?</ChatBubbleMine>
-					<ChatBubbleOther name="중현">저번에 말했던 영국 런던은 어때?</ChatBubbleOther>
-					<ChatBubbleOther name="주호">거기 가면 뭐함?</ChatBubbleOther>
-					<ChatBubbleOther name="중현">몰루? 학주가 제안함</ChatBubbleOther>
-					<ChatBubbleOther name="현주">뮤지컬이나 박물관 아니면 축구 유니폼 쇼핑하던가 할 거는 많지우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?</ChatBubbleOther>
-					<ChatBubbleMine>우리 중놀러갈래간 보고 어디 ? 우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?우리 중놀러갈래간 보고 어디 ?</ChatBubbleMine>
-					<ChatBubbleOther name="중현">저번에 말했던 영국 런던은 어때?</ChatBubbleOther>
-					<ChatBubbleOther name="주호">거기 가면 뭐함?</ChatBubbleOther>
-					<ChatBubbleOther name="중현">몰루? 학주가 제안함</ChatBubbleOther>
-					<ChatBubbleOther name="현주">뮤지컬이나 박물관 아니면 축구 유니폼 쇼핑하던가 할 거는 많지</ChatBubbleOther>
-					<ChatBubbleMine>AI한테 함 계획 짜달라고 해볼게</ChatBubbleMine>
-					<ChatBubbleMine>우리 중간 보고 어디 놀러갈래?</ChatBubbleMine>
-					<ChatBubbleOther name="중현">저번에 말했던 영국 런던은 어때?</ChatBubbleOther>
-					<ChatBubbleOther name="주호">거기 가면 뭐함?</ChatBubbleOther>
-					<ChatBubbleOther name="중현">몰루? 학주가 제안함</ChatBubbleOther>
-					<ChatBubbleOther name="현주">뮤지컬이나 박물관 아니면 축구 유니폼 쇼핑하던가 할 거는 많지</ChatBubbleOther>
+					{chatList.map((chat, index) => (
+						chat.sender === username ? (
+							<ChatBubbleMine key={index}>{chat.message}</ChatBubbleMine>
+						) : (
+							<ChatBubbleOther key={index} name={chat.sender}>
+								{chat.message}
+							</ChatBubbleOther>
+						)
+					))}
 				</div>
+
 				
 				{/* 하단 입력창 */}
-				
 					<div className="absolute bottom-0 left-[29vw] right-[15vw] bg-white p-2 mb-[2vh] border rounded-[22px]">
 						<textarea
 							rows={1}

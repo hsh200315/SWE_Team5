@@ -5,7 +5,7 @@ import { AiOutlineUserAdd, AiOutlineUserDelete } from 'react-icons/ai';
 
 import logo_blue from '../../public/logo_blue.png';
 
-export default function Sidebar({ roomList, SetRoomList, username }) {
+export default function Sidebar({ roomList, SetRoomList, selectedRoom, SetSelectedRoom, username }) {
 
 	const [inviteUsername, SetInviteUsername] = useState('');
 	const [invitedUsers, SetInvitedUsers] = useState([]);
@@ -63,15 +63,19 @@ export default function Sidebar({ roomList, SetRoomList, username }) {
 				</div>
 			</div>
 
-			<div className='w-full h-[70%] px-[4%]'>
+			<div className='w-full h-[70%] px-[4%] overflow-y-auto'>
 				<div className='text-white bold mb-[3%]'>
 					CHATROOMS
 				</div>
 				{roomList.map((idx)=> {
 					return (
-						<div key={idx.room_id} style={{borderRadius:"6px"}} className='flex flex-row bg-white py-[5%] px-[7%]'>
+						<button 
+							key={idx.room_id} 
+							onClick={() => SetSelectedRoom(idx.room_id)}
+							style={{borderRadius:"6px"}} 
+							className='flex flex-row border border-white text-white py-[5%] px-[7%] mb-[3%] w-[100%]'>
 							{idx.room_name}
-						</div>
+						</button>
 					)
 				})}
 				<button

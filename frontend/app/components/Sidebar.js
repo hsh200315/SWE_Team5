@@ -29,7 +29,7 @@ export default function Sidebar({ roomList, SetRoomList, selectedRoom, SetSelect
 			}
 			SetRoomList(prev => [
 				...prev,
-				{ roomId: data.data.roomId, roomname: data.data.roomname }
+				{ room_id: data.data.room_id, room_name: data.data.room_name }
 			]);
 			console.log(data)
 		} catch (error) {

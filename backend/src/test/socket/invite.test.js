@@ -3,7 +3,7 @@ const Client    = require('socket.io-client');
 const { Server } = require('socket.io');
 const { socketAuth } = require('../../middlewares/socketIo');
 const initInMemoryDb = require('../utils/initDB');
-const { makeRoom,getUserlist } = require('../utils/initChatRoom');
+const { makeRoom,getUserlist, inviteUsers } = require('../utils/initChatRoom');
 const { initUsers } = require('../utils/initUser');
 const listenSocket = require("../../sockets");
 let io, server, port;
@@ -21,7 +21,8 @@ beforeAll(async () => {
     await initInMemoryDb();
     await initUsers([inviter, invitee]);
     // inviter가 방을 만든다.
-    room = await makeRoom(inviter, roomname);
+    room = await makeRoom(inviter,roomname);
+   
     socketAuth(io);
     io.on('connection', (socket) => {
         listenSocket(io, socket);

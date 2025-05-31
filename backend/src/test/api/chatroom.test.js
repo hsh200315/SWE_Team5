@@ -20,34 +20,29 @@ beforeEach(async () => {
 
 
 describe('chatroom API', () => {
-  // 1) username 누락시 400
+  // 1) roomname 누락시 400
   test(`POST ${testAPIURL}/rooms without username → 400`, async () => {
     const res = await request(app)
       .post(`${testAPIURL}/rooms`)
-      .send({roomname:"testroom"});
+      .send({userlist:[]});
     expect(res.statusCode).toBe(400);
     
-    expect(res.body.error).toEqual('username and roomname required.');
-  });
-  // 2) roomname 누락시 400
-  test(`POST ${testAPIURL}/rooms without rooname → 400`, async () => {
-    const res = await request(app)
-      .post(`${testAPIURL}/rooms`)
-      .send({username: "testroom"});
-    expect(res.statusCode).toBe(400);
-    
-    expect(res.body.error).toEqual('username and roomname required.');
+    expect(res.body.error).toEqual('userlist and roomname required.');
   });
 
-  // 3) 존재하지 않는 user가 방을 만들려고 할 시 404
+  // 2) 존재하지 않는 user가 방을 만들려고 할 시 failUserlist 값 확인
   test(`POST ${testAPIURL}/rooms unexisted user → 404`, async () => {
     const unexistedUser = 'bob';
+    const roomname = 'testroom';
     const res = await request(app)
       .post(`${testAPIURL}/rooms`)
-      .send({username: unexistedUser, roomname:"bobRoom"});
-    expect(res.statusCode).toBe(404);
-    
-    expect(res.body.error).toEqual('USER NOT FOUND');
+      .send({userlist: [unexistedUser], roomname:roomname});
+    expect(res.statusCode).toBe(201);
+
+    expect(res.body.data.roomname).toEqual(roomname);
+    expect(res.body.data.updated_at).toBeDefined();
+    expect(res.body.data.successUserlist).toEqual([]);
+    expect(res.body.data.failUserlist).toEqual([unexistedUser]);
   });
   // 4) 존재하는 user가 방을 만드는 경우 -> 201
   test(`POST ${testAPIURL}/rooms existed user → 201`, async () => {
@@ -55,17 +50,20 @@ describe('chatroom API', () => {
     const roomname = "testroom";
     const res = await request(app)
       .post(`${testAPIURL}/rooms`)
-      .send({username: username, roomname:roomname});
+      .send({userlist: [username], roomname:roomname});
     expect(res.statusCode).toBe(201);
-    expect(res.body.data.roomId).toEqual(1);
+    expect(res.body.data.roomId).toEqual(2);
     expect(res.body.data.roomname).toEqual(roomname);
     expect(res.body.data.updated_at).toBeDefined();
+
+    expect(res.body.data.successUserlist).toEqual([username]);
+    expect(res.body.data.failUserlist).toEqual([]);
   });
 
   // 5) username이 비어있는 경우
-  test(`GET ${testAPIURL}/rooms without username → 404`, async () => {
+  test(`GET ${testAPIURL}/rooms without username → 400`, async () => {
     const res = await request(app)
-      .get(`${testAPIURL}/rooms`)
+      .post(`${testAPIURL}/roomlist`)
       .send({});
     expect(res.statusCode).toBe(400);
     expect(res.body.error).toEqual('username required.');
@@ -75,7 +73,7 @@ describe('chatroom API', () => {
   test(`GET ${testAPIURL}/rooms not existed user → 404`, async () => {
     const unexistedUser = 'nouser';
     const res = await request(app)
-      .get(`${testAPIURL}/rooms`)
+      .post(`${testAPIURL}/roomlist`)
       .send({username: unexistedUser});
     expect(res.statusCode).toBe(404);
     expect(res.body.error).toEqual('USER NOT FOUND');
@@ -89,14 +87,14 @@ describe('chatroom API', () => {
     // room을 생성한다.
     await request(app)
         .post(`${testAPIURL}/rooms`)
-        .send({username: username, roomname:roomnames[0]});
+        .send({userlist: [username], roomname:roomnames[0]});
     await sleep(1000);
     await request(app)
         .post(`${testAPIURL}/rooms`)
-        .send({username: username, roomname:roomnames[1]});
+        .send({userlist: [username], roomname:roomnames[1]});
 
     // roomlist를 가져온다.
-    const res = await request(app).get(`${testAPIURL}/rooms`).send({username: 'alice'});
+    const res = await request(app).post(`${testAPIURL}/roomlist`).send({username: 'alice'});
     expect(res.body.data.length).toBe(2);
     
   });
@@ -118,7 +116,7 @@ describe('chatroom API', () => {
     // room을 생성한다.
     const res1 = await request(app)
         .post(`${testAPIURL}/rooms`)
-        .send({username: username, roomname:roomname});
+        .send({userlist: [username], roomname:roomname});
     const roomId = res1.body.data.roomId;
 
     const res = await request(app)

@@ -12,7 +12,7 @@ async function initInMemoryDb() {
   const files = fs.readdirSync(migrDir)
     .filter(f => f.endsWith('.sql'))
     .sort();
-
+  await db.exec("PRAGMA foreign_keys = ON;");
   for (const file of files) {
     const sql = fs.readFileSync(path.join(migrDir, file), 'utf8');
     await db.exec(sql);

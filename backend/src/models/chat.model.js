@@ -15,13 +15,15 @@ module.exports = {
     addchat: async (data) => {
         const {roomId, sender, message, isPlan, mapImage} = data;
         try {
+            console.log("data: ", data);
             await run('BEGIN TRANSACTION');
             // 채팅 메시지 삽입
             const result = await run(`INSERT INTO Chat(room_id, sender_id, message, is_plan, map_image) VALUES (?, ?, ?, ?, ?)`,
                 [roomId, sender, message, isPlan, mapImage]);
-            
+            console.log("result: ", result);
             const chatData = await get('SELECT * FROM Chat WHERE chat_id = ?', [result.id]);
             // 해당 채팅방의 최신 업데이트 시간 갱신
+            console.log("chatdata:", chatData)
             await run(
                 'UPDATE ChatRoom SET updated_at = ? WHERE room_id = ?',
                 [chatData.timestamp, roomId]
@@ -29,6 +31,7 @@ module.exports = {
             await run('COMMIT');
             return chatData;
         } catch(err) {
+            console.log(err);
             return new Error(err);
         }
     },
@@ -39,14 +42,6 @@ module.exports = {
             const result = await get("SELECT * FROM Chat WHERE chat_id = ?",[chatId]);
             return result;
         } catch(err) {
-            return new Error(err);
-        }
-    },
-    updateMessage: async ({ chat_id, message }) => {
-        try {
-            await run("UPDATE Chat SET message = ? WHERE chat_id = ?", [message, chat_id]);
-            return true;
-        } catch (err) {
             return new Error(err);
         }
     }

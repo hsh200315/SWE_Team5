@@ -24,12 +24,9 @@ module.exports = {
     },
     // 채팅방 생성 및 사용자 자동 참여 (트랜잭션 처리)
     create: async (data) => {
-        const {username, roomname} = data;
+        const {roomname} = data;
         try {
-            await run('BEGIN TRANSACTION');
             const chatRoom = await run('INSERT INTO ChatRoom (room_name) VALUES (?)', [roomname]);
-            await run('INSERT INTO ChatRoomUser (room_id, user_id) VALUES (?, ?)', [chatRoom.id, username]);
-            await run('COMMIT');
             const result = await get('SELECT room_id, room_name, updated_at FROM ChatRoom WHERE room_id = ?',[chatRoom.id]);
             return result;
         } catch (err) {

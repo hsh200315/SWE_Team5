@@ -18,7 +18,7 @@ module.exports = {
             return failed(res, {
                 code: 500,
                 message: 'server error',
-                error: error.message
+                error: err.message
             });
         }
     }

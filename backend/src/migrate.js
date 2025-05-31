@@ -11,6 +11,8 @@ const { DB_PATH } = require('./config/env');
     filename: DB_PATH,
     driver: sqlite3.Database
   });
+
+  await db.exec(`PRAGMA foreign_keys = ON;`);
   // 2) migrations 테이블이 없으면 생성 (적용된 마이그레이션 기록용)
   await db.exec(`
     CREATE TABLE IF NOT EXISTS migrations (

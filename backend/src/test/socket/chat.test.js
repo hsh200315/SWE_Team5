@@ -25,10 +25,11 @@ beforeAll(async () => {
     await initInMemoryDb();
     await initUsers([sender, receiver, notReceiver]);
     // sender가 방을 만든다.
-    room = await makeRoom(sender, roomname);
+    room = await makeRoom(sender,roomname);
+    
     await inviteUsers(room.room_id, [receiver]);
     // 방을 하나 더 만들어서 다른 방에는 메시지가 가지 않는지 확인한다.
-    notreceiveRoom = await makeRoom(notReceiver, "notreceiveRoom");
+    notreceiveRoom = await makeRoom(notReceiver,"notreceiveRoom");
     socketAuth(io);
     io.on('connection', (socket) => {
         listenSocket(io, socket);

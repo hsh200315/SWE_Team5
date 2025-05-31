@@ -28,7 +28,7 @@ describe('chatroom table test', () => {
     test("create Room", async() => {
         const username = usernames[0];
         const roomname = `${username}'s room`;
-        const result = await chatRoomModel.create({username: username, roomname: roomname});
+        const result = await chatRoomModel.create({roomname: roomname});
         expect(result.room_id).toBe(1);
         expect(result.room_name).toBe(roomname);
         
@@ -37,7 +37,7 @@ describe('chatroom table test', () => {
         
         const username = usernames[0];
         const roomname = `${username}'s room`;
-        const chatRoom = await chatRoomModel.create({username: username, roomname: roomname});
+        const chatRoom = await chatRoomModel.create({roomname: roomname});
         const inviteUsername = usernames[1];
         await chatRoomModel.invite({username: inviteUsername, roomId: chatRoom.room_id});
         const result = await chatRoomModel.findById({username: inviteUsername, roomId: chatRoom.room_id});
@@ -48,21 +48,25 @@ describe('chatroom table test', () => {
         const username = usernames[0];
         const roomname1 = `${username}'s room1`;
         const roomname2 = `${username}'s room2`;
-        const room1 = await chatRoomModel.create({username:username, roomname: roomname1});
+        const room1 = await chatRoomModel.create({roomname: roomname1});
+        await chatRoomModel.invite({username: username, roomId: room1.room_id});
         await sleep(1000);
-        const room2 = await chatRoomModel.create({username:username, roomname: roomname2});
+        const room2 = await chatRoomModel.create({roomname: roomname2});
+        await chatRoomModel.invite({username: username, roomId: room2.room_id});
         const roomlist = await chatRoomModel.roomlist({username: username});
         // 채팅방 2개인지 확인
         expect(roomlist.length).toBe(2);
         // update 내림차순 순으로 잘 가져오는지 확인
         expect(roomlist[0].room_id).toBe(room2.room_id);
         expect(roomlist[1].room_id).toBe(room1.room_id);
+        
     }),
     test('get userlist', async() => {
         const username = usernames[0];
         const roomname = `${username}'s room`;
-        const chatRoom = await chatRoomModel.create({username: username, roomname: roomname});
+        const chatRoom = await chatRoomModel.create({roomname: roomname});
         const inviteUsername = usernames[1];
+        await chatRoomModel.invite({username: username, roomId: chatRoom.room_id})
         await chatRoomModel.invite({username: inviteUsername, roomId: chatRoom.room_id});
         const userlist = await chatRoomModel.userlist({roomId: chatRoom.room_id});
         // 이름순으로 가져와지는지 확인

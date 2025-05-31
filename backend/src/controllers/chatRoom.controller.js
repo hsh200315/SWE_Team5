@@ -6,36 +6,35 @@ module.exports = {
     // 채팅방 생성 API
     createRoom: async (req, res) => {
         try {
-            const {username, roomname} = req.body;
+            const {userlist,roomname} = req.body;
             // 필수 파라미터 누락 시 400 Bad Request 반환
-            if(!username || !roomname) {
+            if(!userlist || !roomname) {
                 return failed(res, {
                     code: 400,
                     message: 'BAD REQUEST',
-                    error: 'username and roomname required.'
+                    error: 'userlist and roomname required.'
                 });
             }
-            // 사용자 존재 여부 확인
-            const isExistUsername = await authModel.findById({username: username});
-            if(!isExistUsername) {
-                return failed(res, {
-                    code: 404,
-                    message: `user ${username} not existed`,
-                    error: 'USER NOT FOUND'
-                    });
+            const room = await chatRoomModel.create({roomname: roomname});
+
+            let successUserlist = []
+            let failUserlist = []
+            for (const username of userlist) {
+                console.log(username)
+                const res = await chatRoomModel.invite({username: username, roomId: room.room_id});
+                if(!res.id) failUserlist.push(username);
+                else successUserlist.push(username);
+            
             }
-            // 채팅방 생성
-            const result = await chatRoomModel.create({username: username, roomname: roomname});
-            // 성공 응답 (201 Created)
             return success(res, {
                 code: 201,
                 message: 'Success make room',
-                data: {roomId: result.room_id, roomname: result.room_name, updated_at: result.updated_at}
+                data: {roomId: room.room_id, roomname: room.room_name, updated_at: room.updated_at, successUserlist: successUserlist, failUserlist: failUserlist}
             });
         } catch(err) {
             return failed(res, {
                 code: 500,
-                message: error.message,
+                message: err.message,
                 error: 'Internal Server Error'
             });
         }
@@ -62,7 +61,7 @@ module.exports = {
         } catch(err) {
             return failed(res, {
                 code: 500,
-                message: error.message,
+                message: err.message,
                 error: 'Internal Server Error'
             });
         }
@@ -99,7 +98,7 @@ module.exports = {
         } catch(err) {
             return failed(res, {
                 code: 500,
-                message: error.message,
+                message: err.message,
                 error: 'Internal Server Error'
             });
         }

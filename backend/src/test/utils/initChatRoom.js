@@ -5,8 +5,9 @@ async function inviteUsers(roomId, usernames) {
         await invite({username: username, roomId: roomId});
     })
 };
-async function makeRoom(username, roomname) {
-    const room = await create({username: username, roomname: roomname});
+async function makeRoom(username,roomname) {
+    const room = await create({roomname: roomname});
+    await invite({username: username, roomId: room.room_id});
     return room;
 }
 async function getUserlist(roomId) {

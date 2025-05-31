@@ -26,10 +26,10 @@ module.exports = {
                 message: "Success Login.",
                 data: {username: username}
             });
-        } catch (error) {
+        } catch (err) {
             return failed(res, {
                 code: 500,
-                message: error.message,
+                message: err.message,
                 error: 'Internal Server Error'
             });
         }

@@ -84,6 +84,7 @@ export default function Sidebar({
         CreateNewRoom={CreateNewRoom}
         username={username}
         isInvite={isInvite}
+        handleInvite={handleInvite}
       />
       <div
         style={{ width: "100%", height: "15%" }}
@@ -205,6 +206,7 @@ function CreateRoomModal({
   CreateNewRoom,
   username,
   isInvite,
+  handleInvite,
 }) {
   const addUser = () => {
     const trimmedName = inviteUsername.trim();
@@ -217,6 +219,12 @@ function CreateRoomModal({
   const removeUser = (name) => {
     SetInvitedUsers(invitedUsers.filter((user) => user !== name));
   };
+
+  const InviteHandler = () => {
+    SetModalOnOff(false);
+    const friendList = invitedUsers.filter((user) => user !== username);
+    handleInvite(friendList);
+  }
 
   const handleApply = () => {
     SetModalOnOff(false);
@@ -332,11 +340,11 @@ function CreateRoomModal({
         </div>
 
         <button
-          onClick={handleApply}
+          onClick={isInvite ? InviteHandler : handleApply}
           style={{ backgroundColor: "#11B8FF" }}
           className="hover:bg-blue-600 text-white font-semibold py-3 rounded-md transition-colors"
         >
-          생성하기
+          {isInvite? "초대하기" : "생성하기"}
         </button>
       </div>
     </ReactModal>

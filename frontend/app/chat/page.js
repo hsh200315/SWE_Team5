@@ -212,21 +212,20 @@ export default function ChatRoom() {
     }
   };
 
-  const handleInvite = (room_id, friendName) => {
-    if (!friendName) return;
+  const handleInvite = (frinedList) => {
+    if (frinedList == []) return;
     socketRef.current.on("invite", (data) => {
-      alert(`${data.username}님이 초대되었습니다.`);
     });
     socketRef.current.on("invite-error", (error) => {
       alert("초대에 실패하였습니다: " + error);
     });
-    socketRef.current.emit("invite", { inviteUsername: friendName });
+    socketRef.current.emit("invite", { userlist: frinedList });
     setOpenMenuRoom(false);
+    fetchRoomUsers();
   };
 
-  const handleLeave = (room_id) => {
+  const handleLeave = () => {
     socketRef.current.on("leave", (data) => {
-      alert(`${data.username}님이 채팅방에서 나갔습니다.`);
     });
     socketRef.current.on("leave-error", (error) => {
       alert("방 나가기에 실패하였습니다: " + error);
@@ -505,7 +504,6 @@ function CheckModal({
     setCheckedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
-    console.log(checkedIds);
   };
 
   const onClickToggle = () => {

@@ -1,11 +1,15 @@
 "use client"
 
-import Sidebar from "../components/Sidebar"
 import { useState, useEffect, useRef } from "react"
+import {io, Socket} from "socket.io-client";
 import ReactModal from "react-modal";
 import { GoCpu, GoPencil, GoFile, GoSearch, GoCheckCircle, GoPaperAirplane } from "react-icons/go";
 
+import Sidebar from "../components/Sidebar"
+
 export default function ChatRoom() {
+	const socketRef = useRef(null);
+	const inputRef = useRef(null);
 
 	const [username, setUsername] = useState('');
 	const [chatList, SetChatList] = useState([]);
@@ -17,6 +21,7 @@ export default function ChatRoom() {
 	const [chatChecked, SetChatChecked] = useState(false)
 	const chatRef = useRef(null);
 
+	// 처음 채팅창 접속할 때
 	useEffect(() => {
 		if (typeof window !== 'undefined') {
 			ReactModal.setAppElement("body");
@@ -24,11 +29,6 @@ export default function ChatRoom() {
 			if (storedUser) {
 				setUsername(storedUser);
 			}
-		}
-		if (chatRef.current) {
-			chatRef.current.scrollTo({
-			top: chatRef.current.scrollHeight,
-			behavior: "smooth"});
 		}
 	}, []);
 
@@ -38,9 +38,30 @@ export default function ChatRoom() {
 	}, [username]);
 
 	useEffect(() => {
-		console.log("selectedRoom", selectedRoom);
+		//선택한 채팅방의 채팅 가져오기
 		if (selectedRoom !== 0) {
 			GetChat();
+		}
+
+		//기존에 연결된 소켓이 있다면 연결 해제
+		if(socketRef.current) {
+			socketRef.current.disconnect();
+		}
+
+		//새로운 소켓 연결
+		if(selectedRoom !== 0) {
+			console.log('username:', username, '\nConnecting to socket for room:',selectedRoom);
+			socketRef.current = io('http://localhost:4000', {
+				auth: {
+					username: username,
+					roomId: selectedRoom
+				}
+			});
+		}
+		if (chatRef.current) {
+			chatRef.current.scrollTo({
+			top: chatRef.current.scrollHeight,
+			behavior: "smooth"});
 		}
 	}, [selectedRoom]);
 
@@ -58,7 +79,6 @@ export default function ChatRoom() {
 				console.error('Failed to fetch rooms:', data);
 				return;
 			}
-			console.log(data.data);
 			SetRoomList(data.data);
 		} catch (error) {
 			console.error('Error fetching chat rooms:', error);
@@ -75,11 +95,20 @@ export default function ChatRoom() {
 				console.error('Failed to fetch chat:', data);
 				return;
 			}
-			console.log(data.data);
 			SetChatList(data.data);
 		} catch (error) {
 			console.error('Error fetching chat rooms:', error);
 		}
+	}
+
+	const SendChat = () => {
+		if (!socketRef.current) return;
+		
+		const text = inputRef.current.value.trim();
+		if (text === '') return;
+		socketRef.current.emit("chat", text);
+		inputRef.current.value = '';
+		GetChat(); // 채팅 전송 후 채팅 목록 갱신
 	}
 
 
@@ -122,12 +151,13 @@ export default function ChatRoom() {
 				{/* 하단 입력창 */}
 					<div className="absolute bottom-0 left-[29vw] right-[15vw] bg-white p-2 mb-[2vh] border rounded-[22px]">
 						<textarea
+							ref={inputRef}
 							rows={1}
 							style={{ maxHeight: '4.5rem' }}
 							placeholder="어디로 가고 싶으신가요? 무엇이든 물어보세요."
 							onInput={(e) => {
 								e.target.style.height = 'auto';
-								e.target.style.height = `${Math.min(e.target.scrollHeight, 72)}px`; // 72px = ~2 lines
+								e.target.style.height = `${Math.min(e.target.scrollHeight, 72)}px`;
 							}}
 							className="w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none"
 						/>
@@ -138,7 +168,12 @@ export default function ChatRoom() {
 								SetModalOnOff={SetModalOnOff}
 								chatChecked={chatChecked}
 								setChatChecked={SetChatChecked}/>
-							<button style={{backgroundColor:"#11B8FF"}} className="p-2 rounded-2xl shadow text-white hover:bg-blue-600"><GoPaperAirplane className="text-base"/></button>
+							<button 
+								style={{backgroundColor:"#11B8FF"}}
+								onClick={() => SendChat()}
+								className="p-2 rounded-2xl shadow text-white hover:bg-blue-600">
+									<GoPaperAirplane className="text-base"/>
+								</button>
 						</div>
 					</div>
 				

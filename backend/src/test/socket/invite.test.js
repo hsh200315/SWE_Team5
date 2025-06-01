@@ -67,7 +67,7 @@ describe('socket invite test', () => {
             inviterSocket.emit('invite', {});
         });
         inviterSocket.on('invite-error', (data) => {
-            expect(data.message).toBe(`inviteUsername is empty.`);
+            expect(data.message).toBe(`userlist is empty.`);
             done();
         })
     });
@@ -79,10 +79,11 @@ describe('socket invite test', () => {
         });
 
         inviterSocket.on('connect', () => {
-            inviterSocket.emit('invite', {inviteUsername: unExistedUsername});
+            inviterSocket.emit('invite', {userlist: [unExistedUsername]});
         });
-        inviterSocket.on('invite-error', (data) => {
-            expect(data.message).toBe(`user ${unExistedUsername} is not existed`);
+        inviterSocket.on('invite', (data) => {
+            expect(data.successUserlist).toStrictEqual([]);
+            expect(data.failUserlist).toStrictEqual([unExistedUsername]);
             done();
         })
     });
@@ -93,10 +94,11 @@ describe('socket invite test', () => {
             auth: { username: inviter, roomId: room.room_id }
         });
         inviterSocket.on('connect', () => {
-            inviterSocket.emit('invite', {inviteUsername: alreadyJoinUsername});
+            inviterSocket.emit('invite', {userlist: [alreadyJoinUsername]});
         });
-        inviterSocket.on('invite-error', (data) => {
-            expect(data.message).toBe(`user ${alreadyJoinUsername} is already invited`);
+        inviterSocket.on('invite', (data) => {
+            expect(data.successUserlist).toStrictEqual([]);
+            expect(data.failUserlist).toStrictEqual([alreadyJoinUsername]);
             done();
         });
     });
@@ -107,11 +109,11 @@ describe('socket invite test', () => {
             auth: { username: inviter, roomId: room.room_id }
         });
         inviterSocket.on('connect', () => {
-            inviterSocket.emit('invite', {inviteUsername: username});
+            inviterSocket.emit('invite', {userlist: [username]});
         });
         
         inviterSocket.on('invite', async (data) => {
-            expect(data.username).toBe(username);
+            expect(data.successUserlist).toStrictEqual([username]);
             const userlist = await getUserlist(room.room_id);
             expect(userlist.length).toBe(2);
             done();

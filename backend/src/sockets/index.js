@@ -1,4 +1,4 @@
-const authModel = require('../models/auth.model');
+
 const chatModel = require('../models/chat.model');
 const chatRoomModel = require('../models/chatRoom.model');
 const { streamChat } = require('../AI_model/chat_ai');
@@ -68,29 +68,27 @@ module.exports = (io, socket) => {
     // 해당 채팅방에 다른 사용자 초대하는 이벤트
     socket.on('invite', async (data) => {
         const roomId = socket.roomId;
-        const {inviteUsername} = data;
+        const {userlist} = data;
         // inviteUsername이 비어 있는 경우, 오류 응답 후 중단
-        if(!inviteUsername) {
-            socket.emit("invite-error", {message: "inviteUsername is empty."});
+        if(!userlist) {
+            socket.emit("invite-error", {message: "userlist is empty."});
             return;
         }
         try {
-            // 초대하려는 사용자가 실제 존재하는지 확인
-            const isExistUsername = await authModel.findById({username: inviteUsername});
-            if(!isExistUsername) {
-                socket.emit("invite-error", {message: `user ${inviteUsername} is not existed`});
-                return;
+            let successUserlist = []
+            let failUserlist = []
+            for (const username of userlist) {
+                const isExist = await chatRoomModel.findById({username: username, roomId: roomId});
+                if(isExist) failUserlist.push(username);
+                else {
+                    const res = await chatRoomModel.invite({username: username, roomId: roomId});
+                    if(!res.id) failUserlist.push(username);
+                    else successUserlist.push(username);
+                }
+                
             }
-            // 이미 해당 방에 초대된 사용자인지 확인
-            const isExistInviteUsernameInRoom = await chatRoomModel.findById({username: inviteUsername, roomId: roomId});
-            if(isExistInviteUsernameInRoom) {
-                socket.emit("invite-error", {message: `user ${inviteUsername} is already invited`});
-                return;
-            }
-            // 사용자 초대 로직 수행 (DB에 초대 정보 저장 등)
-            await chatRoomModel.invite({username: inviteUsername, roomId: roomId});
             // 해당 방에 속한 모든 클라이언트에게 초대 알림 전송
-            io.to(makeRoomId(roomId)).emit("invite", {username: inviteUsername});
+            io.to(makeRoomId(roomId)).emit("invite", {successUserlist: successUserlist, failUserlist: failUserlist});
         } catch {
             socket.emit("server-error", {message: "user is not invited because of server error."});
         }

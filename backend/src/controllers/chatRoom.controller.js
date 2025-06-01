@@ -20,7 +20,7 @@ module.exports = {
             let successUserlist = []
             let failUserlist = []
             for (const username of userlist) {
-                console.log(username)
+                
                 const res = await chatRoomModel.invite({username: username, roomId: room.room_id});
                 if(!res.id) failUserlist.push(username);
                 else successUserlist.push(username);

@@ -24,6 +24,7 @@ export default function ChatRoom() {
 
   const [username, setUsername] = useState("");
   const [chatList, setChatList] = useState([]);
+  const [modalChatList, setModalChatList] = useState([]);
   const [roomList, setRoomList] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(0);
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
@@ -88,6 +89,12 @@ export default function ChatRoom() {
       }
     };
   }, [selectedRoom]);
+
+  useEffect(() => {
+    if (modalOnOff) {
+      setModalChatList(chatList);
+    }
+  }, [modalOnOff]);
 
   // 4) 방 목록을 가져오는 함수
   const fetchRoomList = async () => {
@@ -175,6 +182,8 @@ export default function ChatRoom() {
         SetModalOnOff={setModalOnOff}
         chatChecked={chatChecked}
         SetChatChecked={setChatChecked}
+        modalChatList={modalChatList}
+        username={username}
       />
 
       {/*======= 사이드바 (방 목록) =======*/}
@@ -191,18 +200,23 @@ export default function ChatRoom() {
 
       {/*======= 채팅창 영역 =======*/}
       <main className="flex-1 bg-white pt-[7vh] pb-[20vh] px-[15vw] w-6/7">
-        {/* 메시지 리스트 */}
-        <div ref={chatRef} className="space-y-2 w-full h-full overflow-y-auto">
-          {chatList.map((chat, idx) =>
-            chat.sender_id === username ? (
-              <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
-            ) : (
-              <ChatBubbleOther key={idx} name={chat.sender_id}>
-                {chat.message}
-              </ChatBubbleOther>
-            )
-          )}
-        </div>
+        {selectedRoom === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            채팅방을 선택해주세요.
+          </div>
+        ) : (
+          <div ref={chatRef} className="space-y-2 w-full h-full overflow-y-auto">
+            {chatList.map((chat, idx) =>
+              chat.sender_id === username ? (
+                <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
+              ) : (
+                <ChatBubbleOther key={idx} name={chat.sender_id}>
+                  {chat.message}
+                </ChatBubbleOther>
+              )
+            )}
+          </div>
+        )}
 
         {/* 하단 입력창 + 전송 버튼 */}
         <div className="absolute bottom-0 left-[29vw] right-[15vw] bg-white p-2 mb-[2vh] border rounded-[22px]">
@@ -350,6 +364,8 @@ function CheckModal({
   SetModalOnOff,
   chatChecked,
   SetChatChecked,
+  modalChatList,
+  username,
 }) {
   const onClickToggle = () => {
     SetChatChecked((prev) => !prev);
@@ -409,8 +425,15 @@ function CheckModal({
 
       {/* Chat Content Area (예시) */}
       <div className="flex-1 overflow-y-auto bg-gray-100 p-3 space-y-2 rounded">
-        <ChatBubbleMine>예시 메시지</ChatBubbleMine>
-        <ChatBubbleOther name="사용자">다른 사용자 메시지</ChatBubbleOther>
+        {modalChatList.map((chat, idx) =>
+          chat.sender_id === undefined || chat.sender_id === username ? (
+            <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
+          ) : (
+            <ChatBubbleOther key={idx} name={chat.sender_id}>
+              {chat.message}
+            </ChatBubbleOther>
+          )
+        )}
       </div>
 
       {/* Footer Button */}

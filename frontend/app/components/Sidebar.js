@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ReactModal from "react-modal";
 import { AiOutlineUserAdd, AiOutlineUserDelete } from "react-icons/ai";
@@ -15,13 +15,28 @@ export default function Sidebar({
   selectedRoomUsers,
   username,
   aiGenerating,
+  openMenuRoom,
+  setOpenMenuRoom,
+  handleInvite={handleInvite},
+  handleLeave={handleLeave},
 }) {
   const router = useRouter();
 
+  const [isInvite, SetIsInvite] = useState(false);
   const [inviteUsername, SetInviteUsername] = useState("");
   const [invitedUsers, SetInvitedUsers] = useState([]);
   const [modalOnOff, SetModalOnOff] = useState(false);
   const [newRoomName, SetNewRoomName] = useState("");
+
+  useEffect(() => {
+    if(!modalOnOff){
+      SetIsInvite(false);
+      SetInviteUsername("");
+      SetInvitedUsers([]);
+      SetNewRoomName("");
+      setOpenMenuRoom(false);
+    }
+  }, [modalOnOff]);
 
   const CreateNewRoom = async () => {
     try {
@@ -49,6 +64,8 @@ export default function Sidebar({
     }
   };
 
+
+
   const Logout = () => {
     sessionStorage.removeItem("username");
     router.push("/login");
@@ -66,6 +83,7 @@ export default function Sidebar({
         SetInvitedUsers={SetInvitedUsers}
         CreateNewRoom={CreateNewRoom}
         username={username}
+        isInvite={isInvite}
       />
       <div
         style={{ width: "100%", height: "15%" }}
@@ -80,24 +98,74 @@ export default function Sidebar({
         {roomList.map((idx) => {
           const isSelected = idx.room_id === selectedRoom;
           return (
-            <button
-              key={idx.room_id}
-              disabled={aiGenerating}
-              onClick={() => SetSelectedRoom(idx.room_id)}
-              className={
-                isSelected
-                  ? "flex flex-row bg-white text-[#84CDEE] py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
-                  : "flex flex-row border border-white text-white py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
-              }
-            >
-              {idx.room_name}
-              {isSelected && (
-                <div className="flex items-center ml-auto text-[#84CDEE]">
-                  <LuUser className="inline mr-1 mb-1" />
-                  {selectedRoomUsers.length}
+            <div key={idx.room_id} className="relative">
+              <div
+                onClick={(e) => {
+                  if (!aiGenerating) {
+                    SetSelectedRoom(idx.room_id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                className={`cursor-pointer ${
+                  isSelected
+                    ? "flex flex-row items-center bg-white text-[#84CDEE] py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
+                    : "flex flex-row items-center border border-white text-white py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
+                }`}
+              >
+                <span className="flex-shrink-0">{idx.room_name}</span>
+                {isSelected && (
+                  <>
+                    <div className="flex items-center ml-auto text-[#84CDEE]">
+                      <LuUser className="inline mb-1" />
+                      {selectedRoomUsers.length}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuRoom(openMenuRoom === idx.room_id ? null : idx.room_id);
+                      }}
+                      className={ isSelected ? "ml-1 text-xl hover:bg-white hover:text-[#84CDEE] rounded" :"ml-auto text-xl hover:bg-white hover:text-[#84CDEE] rounded"}
+                      title="메뉴 열기"
+                      type="button"
+                    >
+                      ⋮
+                    </button>
+                  </>
+                )}
+              </div>
+              {/* 메뉴 드롭다운 */}
+              {openMenuRoom === idx.room_id && (
+                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded border shadow-lg z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      SetIsInvite(true);
+                      SetInviteUsername("");
+                      SetInvitedUsers([]);
+                      SetModalOnOff(true);
+                    }}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    친구 초대
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLeave(idx.room_id);
+                      SetSelectedRoom(0);
+                      SetRoomList((prev) =>
+                        prev.filter((room) => room.room_id !== idx.room_id)
+                      );
+                      setOpenMenuRoom(false);
+                    }}
+                    className="block w-full bg-red-500 text-white text-left px-4 py-2 hover:bg-red-600"
+                  >
+                    방 나가기
+                  </button>
                 </div>
               )}
-            </button>
+            </div>
           );
         })}
 
@@ -136,6 +204,7 @@ function CreateRoomModal({
   SetInvitedUsers,
   CreateNewRoom,
   username,
+  isInvite,
 }) {
   const addUser = () => {
     const trimmedName = inviteUsername.trim();
@@ -194,16 +263,21 @@ function CreateRoomModal({
         </button>
       </div>
       <div className="flex flex-col flex-grow px-6">
-        <label style={{ color: "#A8A8A8" }} className="font-medium mb-2">
-          방 이름
-        </label>
-        <input
-          type="text"
-          value={newRoomName}
-          onChange={(e) => SetNewRoomName(e.target.value)}
-          placeholder="방 이름을 입력해주세요"
-          className="border border-gray-300 rounded-md px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        {!isInvite && (
+          <>
+            <label style={{ color: "#A8A8A8" }} className="font-medium mb-2">
+              방 이름
+            </label>
+            <input
+              type="text"
+              value={newRoomName}
+              onChange={(e) => SetNewRoomName(e.target.value)}
+              placeholder="방 이름을 입력해주세요"
+              className="border border-gray-300 rounded-md px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </>
+        )}
+        
 
         <label style={{ color: "#A8A8A8" }} className="font-medium mb-2">
           초대할 유저 이름

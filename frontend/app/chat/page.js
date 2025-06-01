@@ -30,6 +30,8 @@ export default function ChatRoom() {
   const [selectedRoom, setSelectedRoom] = useState(0);
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [openMenuRoom, setOpenMenuRoom] = useState(false);
+  
 
   const [buttonOnOff, setButtonOnOff] = useState([
     false,
@@ -210,6 +212,29 @@ export default function ChatRoom() {
     }
   };
 
+  const handleInvite = (room_id, friendName) => {
+    if (!friendName) return;
+    socketRef.current.on("invite", (data) => {
+      alert(`${data.username}님이 초대되었습니다.`);
+    });
+    socketRef.current.on("invite-error", (error) => {
+      alert("초대에 실패하였습니다: " + error);
+    });
+    socketRef.current.emit("invite", { inviteUsername: friendName });
+    setOpenMenuRoom(false);
+  };
+
+  const handleLeave = (room_id) => {
+    socketRef.current.on("leave", (data) => {
+      alert(`${data.username}님이 채팅방에서 나갔습니다.`);
+    });
+    socketRef.current.on("leave-error", (error) => {
+      alert("방 나가기에 실패하였습니다: " + error);
+    });
+    socketRef.current.emit("leave", {});
+    setOpenMenuRoom(null);
+  };
+
   return (
     <div className="flex h-screen">
       {/*======= 모달창 =======*/}
@@ -232,6 +257,10 @@ export default function ChatRoom() {
           selectedRoomUsers={selectedRoomUsers}
           username={username}
           aiGenerating={aiGenerating}
+          openMenuRoom={openMenuRoom}
+          setOpenMenuRoom={setOpenMenuRoom}
+          handleInvite={handleInvite}
+          handleLeave={handleLeave}
         />
       </div>
 

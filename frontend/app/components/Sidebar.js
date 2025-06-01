@@ -65,20 +65,26 @@ export default function Sidebar({
         <div className="w-[60%] text-3xl">SENA.AI</div>
       </div>
 
-      <div className="w-full h-[70%] px-[4%] overflow-y-auto">
-        <div className="text-white bold mb-[3%]">CHATROOMS</div>
-        {roomList.map((idx) => {
-          return (
-            <button
-              key={idx.room_id}
-              onClick={() => SetSelectedRoom(idx.room_id)}
-              style={{ borderRadius: "6px" }}
-              className="flex flex-row border border-white text-white py-[5%] px-[7%] mb-[3%] w-[100%]"
-            >
-              {idx.room_name}
-            </button>
-          );
-        })}
+      <div className="w-full h-[60%] px-[4%] overflow-y-auto">
+        
+          <div className="text-white bold mb-[3%]">CHATROOMS</div>
+          {roomList.map((idx) => {
+            const isSelected = idx.room_id === selectedRoom;
+            return (
+              <button
+                key={idx.room_id}
+                onClick={() => SetSelectedRoom(idx.room_id)}
+                className={
+                  isSelected
+                    ? "flex flex-row bg-white text-[#84CDEE] py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
+                    : "flex flex-row border border-white text-white py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
+                }
+              >
+                {idx.room_name}
+              </button>
+            );
+          })}
+        
         <button
           onClick={() => SetModalOnOff(true)}
           style={{ borderRadius: "6px" }}
@@ -91,7 +97,7 @@ export default function Sidebar({
         </button>
       </div>
 
-      <div className="flex flex-row text-white items-center h-[15%] pl-[20%] text-2xl">
+      <div className="flex flex-row text-white items-center justify-center h-[20%] w-[100%] text-2xl">
         {username}
       </div>
     </div>
@@ -124,8 +130,6 @@ function CreateRoomModal({
 
   const handleApply = () => {
     SetModalOnOff(false);
-    console.log("방 이름:", newRoomName);
-    console.log("초대된 유저:", invitedUsers);
     CreateNewRoom();
   };
 

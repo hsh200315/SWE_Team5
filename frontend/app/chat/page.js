@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 import ReactModal from "react-modal";
 import {
@@ -15,6 +16,8 @@ import {
 import Sidebar from "../components/Sidebar";
 
 export default function ChatRoom() {
+  const router = useRouter();
+
   const socketRef = useRef(null);
   const inputRef = useRef(null);
   const chatRef = useRef(null);
@@ -37,10 +40,15 @@ export default function ChatRoom() {
 
   // 1) 컴포넌트 마운트 시 sessionStorage에서 username 읽어오기
   useEffect(() => {
+    const storedUser = sessionStorage.getItem("username");
     if (typeof window !== "undefined") {
       ReactModal.setAppElement("body");
-      const storedUser = sessionStorage.getItem("username");
       if (storedUser) setUsername(storedUser);
+    }
+    if (!storedUser){
+      router.push("/login");
+      alert("로그인이 필요합니다.");
+      return;
     }
   }, []);
 

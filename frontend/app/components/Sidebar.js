@@ -1,5 +1,6 @@
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import ReactModal from "react-modal";
 import { AiOutlineUserAdd, AiOutlineUserDelete } from "react-icons/ai";
 import { LuUser } from "react-icons/lu";
@@ -14,6 +15,8 @@ export default function Sidebar({
   selectedRoomUsers,
   username,
 }) {
+  const router = useRouter();
+
   const [inviteUsername, SetInviteUsername] = useState("");
   const [invitedUsers, SetInvitedUsers] = useState([]);
   const [modalOnOff, SetModalOnOff] = useState(false);
@@ -45,6 +48,10 @@ export default function Sidebar({
     }
   };
 
+  const Logout = () => {
+    sessionStorage.removeItem("username");
+    router.push("/login");
+  };
   return (
     <div style={{ width: "100%", backgroundColor: "#84CDEE", height: "100vh" }}>
       <CreateRoomModal
@@ -67,32 +74,31 @@ export default function Sidebar({
         <div className="w-[60%] text-3xl">SENA.AI</div>
       </div>
 
-      <div className="w-full h-[60%] px-[4%] overflow-y-auto">
-        
-          <div className="text-white bold mb-[3%]">CHATROOMS</div>
-          {roomList.map((idx) => {
-            const isSelected = idx.room_id === selectedRoom;
-            return (
-              <button
-                key={idx.room_id}
-                onClick={() => SetSelectedRoom(idx.room_id)}
-                className={
-                  isSelected
-                    ? "flex flex-row bg-white text-[#84CDEE] py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
-                    : "flex flex-row border border-white text-white py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
-                }
-              >
-                {idx.room_name}
-                {isSelected && (
-                  <div className="flex items-center ml-auto text-[#84CDEE]">
-                    <LuUser className="inline mr-1 mb-1"/>
-                    {selectedRoomUsers.length}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        
+      <div className="w-full h-[65%] px-[4%] overflow-y-auto">
+        <div className="text-white bold mb-[3%]">CHATROOMS</div>
+        {roomList.map((idx) => {
+          const isSelected = idx.room_id === selectedRoom;
+          return (
+            <button
+              key={idx.room_id}
+              onClick={() => SetSelectedRoom(idx.room_id)}
+              className={
+                isSelected
+                  ? "flex flex-row bg-white text-[#84CDEE] py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
+                  : "flex flex-row border border-white text-white py-[5%] px-[7%] mb-[3%] w-[100%] rounded-[6px]"
+              }
+            >
+              {idx.room_name}
+              {isSelected && (
+                <div className="flex items-center ml-auto text-[#84CDEE]">
+                  <LuUser className="inline mr-1 mb-1" />
+                  {selectedRoomUsers.length}
+                </div>
+              )}
+            </button>
+          );
+        })}
+
         <button
           onClick={() => SetModalOnOff(true)}
           style={{ borderRadius: "6px" }}
@@ -105,8 +111,13 @@ export default function Sidebar({
         </button>
       </div>
 
-      <div className="flex flex-row text-white items-center justify-center h-[20%] w-[100%] text-2xl">
+      <div className="flex flex-row text-white items-center justify-center mb-[6%] w-[100%] text-2xl">
         {username}
+      </div>
+      <div className="flex flex-row items-center justify-center w-[100%]">
+        <button onClick={()=> Logout()} className="flex flex-row items-center justify-center w-[60%] bg-white text-[#84CDEE] py-[3%] px-[5%] rounded-[6px] hover:bg-gray-200 transition-colors">
+          Log out
+        </button>
       </div>
     </div>
   );

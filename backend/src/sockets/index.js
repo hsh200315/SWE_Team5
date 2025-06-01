@@ -35,7 +35,7 @@ module.exports = (io, socket) => {
             let aiMessage = '';
             const aiChat = await chatModel.addchat({
                 roomId: roomId, 
-                sender: "SENA", 
+                sender: "Sena", 
                 message: "",
                 isPlan: false, 
                 mapImage: null
@@ -131,14 +131,14 @@ module.exports = (io, socket) => {
         let aiMessage = '';
         const aiChat = await chatModel.addchat({
             roomId: roomId, 
-            sender: "SENA", 
+            sender: "Sena", 
             message: "",
             isPlan: false, 
             mapImage: null
         });
         const coordinateChat = await chatModel.addchat({
             roomId: roomId, 
-            sender: "SENA", 
+            sender: "Sena", 
             message: "",
             isPlan: true, 
             mapImage: null

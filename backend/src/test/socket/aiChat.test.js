@@ -22,7 +22,7 @@ beforeAll(async () => {
   });
 
   await initInMemoryDb();
-  await initUsers([sender, receiver, "SENA"]);
+  await initUsers([sender, receiver, "Sena"]);
   room = await makeRoom(sender, roomName);
   await inviteUsers(room.room_id, [receiver]);
 

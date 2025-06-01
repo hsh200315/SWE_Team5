@@ -29,6 +29,7 @@ export default function ChatRoom() {
   const [roomList, setRoomList] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(0);
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   const [buttonOnOff, setButtonOnOff] = useState([
     false,
@@ -75,6 +76,7 @@ export default function ChatRoom() {
       auth: { username, roomId: selectedRoom },
     });
 
+    // 소켓 연결 후 채팅 메시지 수신
     socketRef.current.on("chatMsg", (data) => {
       setChatList((prev) => [
         ...prev,
@@ -87,6 +89,33 @@ export default function ChatRoom() {
         });
       }
     });
+
+    socketRef.current.on("AI_chat", (data) => {
+      setChatList((prev) => {
+        const lastIndex = prev.length - 1;
+        if (lastIndex >= 0 && prev[lastIndex].sender_id === data.sender_id) {
+          const updated = [...prev];
+          const lastMessage = updated[lastIndex];
+          updated[lastIndex] = {
+            sender_id: lastMessage.sender_id,
+            message: lastMessage.message + data.message,
+          };
+          return updated;
+        }
+        // Otherwise, add a new AI message entry
+        return [...prev, { sender_id: data.sender_id, message: data.message }];
+      });
+      if (chatRef.current) {
+        chatRef.current.scrollTo({
+          top: chatRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    });
+
+    socketRef.current.on("AI_chat_done", () => {
+      setAiGenerating(false);
+    });
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -98,7 +127,6 @@ export default function ChatRoom() {
     setModalChatList(chatList);
     if (modalOnOff) {
       setCheckedIds([]);}
-    console.log(modalOnOff, checkedIds)
   }, [modalOnOff]);
 
   // 4) 방 목록을 가져오는 함수
@@ -154,8 +182,11 @@ export default function ChatRoom() {
     const chatData = {
       msg: text,
       toAI: buttonOnOff[0],
-      chatHistory: [],
+      chatHistory: checkedIds,
     };
+    if (buttonOnOff[0]) {
+      setAiGenerating(true);
+    }
 
     socketRef.current.emit("chatMsg", chatData);
     inputRef.current.value = "";
@@ -200,6 +231,7 @@ export default function ChatRoom() {
           SetSelectedRoom={setSelectedRoom}
           selectedRoomUsers={selectedRoomUsers}
           username={username}
+          aiGenerating={aiGenerating}
         />
       </div>
 
@@ -240,7 +272,7 @@ export default function ChatRoom() {
                 72
               )}px`;
             }}
-            disabled={selectedRoom === 0}
+            disabled={selectedRoom === 0 || aiGenerating}
             className={`w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none ${
               selectedRoom === 0 ? "bg-gray-100 cursor-not-allowed" : ""
             }`}
@@ -304,10 +336,10 @@ function ChatBubbleMine({ children }) {
 /*======== 모달채팅 버블 (Other) ========*/
 function ModalChatBubbleOther({ name, children, toggleCheck, checkedIds, chat }) {
   return (
-    <div className="flex flex-col items-start mb-2">
+    <div className="flex flex-col items-start mb-2 w-[100%]">
       <div className="text-sm font-semibold ml-2">{name}</div>
-      <div className="flex flex-row">
-        <div className="bg-sky-300 px-4 py-2 rounded-lg max-w-[100%] break-words ml-2">
+      <div className="flex flex-row w-[100%]">
+        <div className="bg-sky-300 px-4 py-2 rounded-lg max-w-[70%] break-words ml-2">
           {children}
         </div>
         <button
@@ -444,6 +476,7 @@ function CheckModal({
     setCheckedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
+    console.log(checkedIds);
   };
 
   const onClickToggle = () => {
@@ -514,11 +547,11 @@ function CheckModal({
           )
           .map((chat, idx) =>
             chat.sender_id === username ? (
-              <div className="flex justify-end mb-2 items-center" key={idx}>
+              <div className="flex justify-end mb-2 items-center w-[100%]" key={idx}>
                 <ModalChatBubbleMine toggleCheck={toggleCheck} checkedIds={checkedIds} chat={chat}>{chat.message}</ModalChatBubbleMine>
               </div>
             ) : (
-              <div className="flex justify-start mb-2 items-center" key={idx}>
+              <div className="flex justify-start mb-2 items-center w-[100%]" key={idx}>
                 <ModalChatBubbleOther key={idx} name={chat.sender_id} toggleCheck={toggleCheck} checkedIds={checkedIds} chat={chat}>
                   {chat.message}
                 </ModalChatBubbleOther>

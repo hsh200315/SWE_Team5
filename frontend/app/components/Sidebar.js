@@ -14,6 +14,7 @@ export default function Sidebar({
   SetSelectedRoom,
   selectedRoomUsers,
   username,
+  aiGenerating,
 }) {
   const router = useRouter();
 
@@ -81,6 +82,7 @@ export default function Sidebar({
           return (
             <button
               key={idx.room_id}
+              disabled={aiGenerating}
               onClick={() => SetSelectedRoom(idx.room_id)}
               className={
                 isSelected

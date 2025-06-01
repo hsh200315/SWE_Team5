@@ -2,7 +2,7 @@ const { success, failed } = require('../utils/response');
 const OpenAI = require("openai");
 const { OPENAI_API_KEY, BRAVE_API_KEY } = require('../config/env');
 const { getSearchResult } = require('../utils/utils');
-
+const chatModel = require('../models/chat.model')
 
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
@@ -11,18 +11,24 @@ const openai = new OpenAI({
 module.exports = {
   promptGeneration: async (req, res) => {
     try {
-      const { chat_history, user_question } = req.body;
-
-      if (!chat_history || !user_question) {
+      const { chatHistory, msg } = req.body;
+      if (!chatHistory || !msg) {
         return failed(res, {
           code: 400,
-          message: "chat_history와 user_question을 모두 포함해야 합니다.",
+          message: "chat_history와 msg를 모두 포함해야 합니다.",
           error: 'Bad Request'
         });
       }
 
-      // chat_history를 문자열로 변환
-      const formattedHistory = chat_history.map(msg => `${msg.username}: ${msg.message}`).join('\n');
+      let chatLogs = '';
+      for (const chatId of chatHistory) {
+          const result = await chatModel.findById({ chatId });
+          if (result instanceof Error) {
+              socket.emit("AI-chat-error", {message: "msg is not sent because of AI chat error."});
+              continue;
+          }
+          chatLogs += `${result.sender_id}: ${result.message}\n`;
+      }
 
       const systemPrompt = `
         너는 여행 일정 및 계획에 관한 질문을 다루는 전문가야.
@@ -40,7 +46,7 @@ module.exports = {
 
       const messages = [
         { role: "system", content: systemPrompt.trim() },
-        { role: "user", content: `채팅 내역:\n${formattedHistory}\n\n현재 질문:\n${user_question}` }
+        { role: "user", content: `채팅 내역:\n${chatLogs}\n\n현재 질문:\n${msg}` }
       ];
 
       const completion = await openai.chat.completions.create({

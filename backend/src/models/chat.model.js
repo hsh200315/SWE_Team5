@@ -23,7 +23,6 @@ module.exports = {
             
             const chatData = await get('SELECT * FROM Chat WHERE chat_id = ?', [result.id]);
             // 해당 채팅방의 최신 업데이트 시간 갱신
-            
             await run(
                 'UPDATE ChatRoom SET updated_at = ? WHERE room_id = ?',
                 [chatData.timestamp, roomId]
@@ -42,6 +41,14 @@ module.exports = {
             const result = await get("SELECT * FROM Chat WHERE chat_id = ?",[chatId]);
             return result;
         } catch(err) {
+            return new Error(err);
+        }
+    },
+    updateMessage: async ({ chat_id, message }) => {
+        try {
+            await run("UPDATE Chat SET message = ? WHERE chat_id = ?", [message, chat_id]);
+            return true;
+        } catch (err) {
             return new Error(err);
         }
     }

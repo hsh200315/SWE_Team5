@@ -3,7 +3,7 @@ const { HumanMessage } = require("langchain/schema");
 const { OPENAI_API_KEY } = require('../config/env');
 
 
-async function streamChat({ input, chatList, onToken, onDone }) {
+async function streamChat({ msg, chatLogs, onToken, onDone }) {
   const model = new ChatOpenAI({
     modelName: "gpt-4o",
     temperature: 0.5,
@@ -20,9 +20,9 @@ async function streamChat({ input, chatList, onToken, onDone }) {
       },
     ],
   });
-  //console.log(input);
-  //console.log(chatList);
-  await model.call([new HumanMessage(input)]);
+  //console.log(msg);
+  //console.log(chatLogs);
+  await model.call([new HumanMessage(msg)]);
 }
 
 module.exports = { streamChat };

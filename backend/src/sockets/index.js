@@ -23,7 +23,46 @@ module.exports = (io, socket) => {
             socket.emit("server-error", {message: "msg is not sent because of server error."});
         }
         if(toAI) {
-            
+            let chatLogs = '';
+            for (const chatId of chatHistory) {
+                const result = await chatModel.findById({ chatId });
+                if (result instanceof Error) {
+                    socket.emit("AI-chat-error", {message: "msg is not sent because of AI chat error."});
+                    continue;
+                }
+                chatLogs += `${result.sender_id}: ${result.message}\n`;
+            }
+            let aiMessage = '';
+            const aiChat = await chatModel.addchat({
+                roomId: roomId, 
+                sender: "SENA", 
+                message: "",
+                isPlan: false, 
+                mapImage: null
+            });
+            try{
+                await streamChat({
+                    msg,
+                    chatLogs,
+                    onToken: (token) => {
+                        aiMessage+=token;
+                        io.to(makeRoomId(roomId)).emit("AI_chat", {
+                            ...aiChat,
+                            message: token
+                        });
+                    },
+                    onDone: async () => {
+                        await chatModel.updateMessage({
+                            chat_id: aiChat.chat_id,
+                            message: aiMessage
+                        });
+
+                        io.to(makeRoomId(roomId)).emit("AI_chat_done");
+                    }
+                });
+            } catch (err) {
+                socket.emit("AI-chat-error", {message: "msg is not sent because of AI chat error."});
+            }
         }
     });
     // 해당 채팅방에 다른 사용자 초대하는 이벤트
@@ -77,19 +116,66 @@ module.exports = (io, socket) => {
         }
     });
 
-    socket.on("AI_chat", async ({ input, chatList }) => {
-
+    socket.on("travel_plan", async (data) => {
         const roomId = socket.roomId;
-        // AI에게 질문하는 내용 자체도 다른 사람들에게 전송이 되어야 함. 이 부분을 어떻게 처리할 지 논의해보기
-        await streamChat({
-            input,
-            chatList,
-            onToken: (token) => {
-                io.to(makeRoomId(roomId)).emit("AI_chat", token);
-            },
-            onDone: () => {
-                io.to(makeRoomId(roomId)).emit("AI_chat_done");
+        const {chatHistory} = data;
+        let chatLogs = '';;
+        for (const chatId of chatHistory) {
+            const result = await chatModel.findById({ chatId });
+            if (result instanceof Error) {
+                socket.emit("AI-chat-error", {message: "msg is not sent because of AI chat error."});
+                continue;
             }
+            chatLogs += `${result.sender_id}: ${result.message}\n`;
+        }
+        let aiMessage = '';
+        const aiChat = await chatModel.addchat({
+            roomId: roomId, 
+            sender: "SENA", 
+            message: "",
+            isPlan: false, 
+            mapImage: null
         });
+        const coordinateChat = await chatModel.addchat({
+            roomId: roomId, 
+            sender: "SENA", 
+            message: "",
+            isPlan: true, 
+            mapImage: null
+        });
+        const temp_coordinate = [
+            [37.579617, 126.977041], 
+            [37.551169, 126.988227],  
+            [37.563757, 126.982677]   
+        ];
+        const temp_coord_str = JSON.stringify(temp_coordinate);
+        const msg = "안녕 GPT야 너에 대해서 소개해줘"
+        try{
+            await streamChat({
+                msg,
+                chatLogs,
+                onToken: (token) => {
+                    aiMessage+=token;
+                    io.to(makeRoomId(roomId)).emit("travel_plan", {
+                        ...aiChat,
+                        message: token
+                    });
+                },
+                onDone: async () => {
+                    await chatModel.updateMessage({
+                        chat_id: coordinateChat.chat_id,
+                        message: temp_coord_str
+                    });
+
+                    io.to(makeRoomId(roomId)).emit("coordinate",{
+                        ...coordinateChat,
+                        message:temp_coord_str
+                    });
+                }
+            });
+        } catch(err){
+            socket.emit("Travel-plan-error", {message: "msg is not sent because of travel plan error."});
+        }
+        
     });
 }

@@ -12,6 +12,7 @@ import {
   GoPencil,
   GoFile,
 } from "react-icons/go";
+import { AiOutlineFilter } from "react-icons/ai";
 
 import Sidebar from "../components/Sidebar";
 
@@ -37,7 +38,7 @@ export default function ChatRoom() {
     false,
   ]);
   const [modalOnOff, setModalOnOff] = useState(false);
-  const [chatChecked, setChatChecked] = useState(false);
+  const [checkedIds, setCheckedIds] = useState([]);
 
   // 1) 컴포넌트 마운트 시 sessionStorage에서 username 읽어오기
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function ChatRoom() {
       ReactModal.setAppElement("body");
       if (storedUser) setUsername(storedUser);
     }
-    if (!storedUser){
+    if (!storedUser) {
       router.push("/login");
       alert("로그인이 필요합니다.");
       return;
@@ -93,7 +94,7 @@ export default function ChatRoom() {
   useEffect(() => {
     if (modalOnOff) {
       setModalChatList(chatList);
-    }
+      setCheckedIds([]);}
   }, [modalOnOff]);
 
   // 4) 방 목록을 가져오는 함수
@@ -111,7 +112,7 @@ export default function ChatRoom() {
       console.error("방 목록 요청 중 에러:", err);
     }
   };
-  
+
   // 5) 선택된 방의 채팅 내역을 가져오는 함수
   const fetchChatHistory = async () => {
     try {
@@ -180,8 +181,8 @@ export default function ChatRoom() {
       <CheckModal
         modalOnOff={modalOnOff}
         SetModalOnOff={setModalOnOff}
-        chatChecked={chatChecked}
-        SetChatChecked={setChatChecked}
+        checkedIds={checkedIds}
+        setCheckedIds={setCheckedIds}
         modalChatList={modalChatList}
         username={username}
       />
@@ -205,7 +206,10 @@ export default function ChatRoom() {
             채팅방을 선택하거나, 새로운 채팅방을 만드세요!
           </div>
         ) : (
-          <div ref={chatRef} className="space-y-2 w-full h-full overflow-y-auto">
+          <div
+            ref={chatRef}
+            className="space-y-2 w-full h-full overflow-y-auto pb-[20vh]"
+          >
             {chatList.map((chat, idx) =>
               chat.sender_id === username ? (
                 <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
@@ -238,13 +242,17 @@ export default function ChatRoom() {
             }`}
           />
           <div className="flex justify-between items-center">
-            <div className={selectedRoom === 0 ? "opacity-50 pointer-events-none" : ""}>
+            <div
+              className={
+                selectedRoom === 0 ? "opacity-50 pointer-events-none" : ""
+              }
+            >
               <ButtonList
                 SetButtonOnOff={setButtonOnOff}
                 buttonOnOff={buttonOnOff}
                 SetModalOnOff={setModalOnOff}
-                chatChecked={chatChecked}
-                setChatChecked={setChatChecked}
+                checkedIds={checkedIds}
+                setCheckedIds={setCheckedIds}
               />
             </div>
             <button
@@ -252,7 +260,9 @@ export default function ChatRoom() {
               disabled={selectedRoom === 0}
               style={{ backgroundColor: "#11B8FF" }}
               className={`p-2 rounded-2xl shadow text-white hover:bg-blue-600 ${
-                selectedRoom === 0 ? "opacity-50 cursor-not-allowed hover:bg-blue-600" : ""
+                selectedRoom === 0
+                  ? "opacity-50 cursor-not-allowed hover:bg-blue-600"
+                  : ""
               }`}
             >
               <GoPaperAirplane className="text-base" />
@@ -269,7 +279,7 @@ function ChatBubbleOther({ name, children }) {
   return (
     <div className="text-black w-fit max-w-[70%]">
       <div className="text-sm font-semibold">{name}</div>
-      <div className="bg-sky-300 px-4 py-2 rounded-lg">{children}</div>
+      <div className="bg-sky-300 px-4 py-2 rounded-lg w-fit">{children}</div>
     </div>
   );
 }
@@ -277,8 +287,8 @@ function ChatBubbleOther({ name, children }) {
 /*======== 채팅 버블 (Mine) ========*/
 function ChatBubbleMine({ children }) {
   return (
-    <div className="flex justify-end mb-2">
-      <div className="bg-sky-100 text-black px-4 py-2 rounded-2xl w-fit max-w-[70%] text-left">
+    <div className="flex justify-end mb-2 max-w-[70%]">
+      <div className="bg-sky-100 text-black px-4 py-2 rounded-2xl w-fit text-left">
         {children}
       </div>
     </div>
@@ -290,7 +300,8 @@ function ButtonList({
   SetButtonOnOff,
   buttonOnOff,
   SetModalOnOff,
-  chatChecked,
+  checkedIds,
+  setCheckedIds,
 }) {
   const buttonTitle = [
     "AI에게 물어보기",
@@ -353,9 +364,9 @@ function ButtonList({
       <div className="flex items-center justify-center">
         <button
           style={{
-            color: chatChecked ? "#ffffff" : "#8F8F8F",
-            borderColor: chatChecked ? "#4ade80" : "#D4D4D4",
-            backgroundColor: chatChecked ? "#4ade80" : "#ffffff",
+            color: checkedIds.length == 0 ? "#ffffff" : "#8F8F8F",
+            borderColor: checkedIds.length == 0 ? "#4ade80" : "#D4D4D4",
+            backgroundColor: checkedIds.length == 0 ? "#4ade80" : "#ffffff",
           }}
           className="ml-[0.5rem] rounded-full border text-3xl transition-colors duration-200 border-none"
         >
@@ -370,15 +381,20 @@ function ButtonList({
 function CheckModal({
   modalOnOff,
   SetModalOnOff,
-  chatChecked,
-  SetChatChecked,
+  checkedIds,
+  setCheckedIds,
   modalChatList,
   username,
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
+  const toggleCheck = (id) => {
+    setCheckedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
   const onClickToggle = () => {
-    SetChatChecked((prev) => !prev);
     SetModalOnOff(false);
   };
 
@@ -427,40 +443,66 @@ function CheckModal({
       </div>
 
       {/* Top Right Toggle */}
-      <div className="flex justify-end w-full h-[5%] mb-3">
-        <select className="border w-[20%]">
+      <div className="flex justify-end w-full h-[8%] mb-3">
+        <button className="flex items-center px-2 py-1 bg-white border border-gray-300 rounded-l-md">
+          <AiOutlineFilter className="text-xl text-gray-500" />
+        </button>
+        <select className="border border-gray-300 border-l-0 rounded-r-md px-2 py-1">
           <option>Both</option>
           <option>Checked</option>
           <option>Unchecked</option>
         </select>
       </div>
 
-      {/* Chat Content Area (예시) */}
-      <div className="flex-1 overflow-y-auto bg-gray-100 p-3 space-y-2 rounded">
+      {/* Chat Content Area*/}
+      <div className="flex-1 overflow-y-auto bg-gray-100 p-3 space-y-2 rounded h-[40%] mb-16">
         {modalChatList
           .filter((chat) =>
             chat.message.toLowerCase().includes(searchQuery.toLowerCase())
           )
           .map((chat, idx) =>
-            chat.sender_id === undefined || chat.sender_id === username ? (
-              <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
+            chat.sender_id === username ? (
+              <div className="flex justify-end mb-2 items-center" key={idx}>
+                <button
+                  onClick={() => toggleCheck(chat.chat_id)}
+                  className="mb-2 mr-2"
+                >
+                  <GoCheckCircle
+                    className={`text-xl ${
+                      checkedIds.includes(chat.chat_id) ? "text-green-500" : "text-gray-300"
+                    }`}
+                  />
+                </button>
+                <ChatBubbleMine>{chat.message}</ChatBubbleMine>
+              </div>
             ) : (
-              <ChatBubbleOther key={idx} name={chat.sender_id}>
-                {chat.message}
-              </ChatBubbleOther>
+              <div className="flex justify-start mb-2 items-center" key={idx}>
+                <ChatBubbleOther key={idx} name={chat.sender_id}>
+                  {chat.message}
+                </ChatBubbleOther>
+                <button
+                  onClick={() => toggleCheck(chat.chat_id)}
+                  className="ml-2 mt-3"
+                >
+                  <GoCheckCircle
+                    className={`text-xl ${
+                      checkedIds.includes(chat.chat_id) ? "text-green-500" : "text-gray-300"
+                    }`}
+                  />
+                </button>
+              </div>
             )
           )}
       </div>
 
       {/* Footer Button */}
-      <div className="mt-4 flex justify-end">
-        <button
-          onClick={onClickToggle}
-          className="bg-green-500 text-white px-4 py-2 rounded-full text-sm shadow hover:bg-green-600"
-        >
-          선택된 채팅 내역 질문에 포함
-        </button>
-      </div>
+      <button
+        onClick={onClickToggle}
+        className="absolute bottom-4 right-4 bg-green-500 hover:bg-green-600 text-white flex items-center space-x-2 px-4 py-2 rounded-full shadow-lg"
+      >
+        <GoCheckCircle className="text-lg" />
+        <span>선택한 채팅 내역 지문에 포함</span>
+      </button>
     </ReactModal>
   );
 }

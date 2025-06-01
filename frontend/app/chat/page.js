@@ -375,6 +375,8 @@ function CheckModal({
   modalChatList,
   username,
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+
   const onClickToggle = () => {
     SetChatChecked((prev) => !prev);
     SetModalOnOff(false);
@@ -411,6 +413,8 @@ function CheckModal({
       <div className="flex justify-between items-center border-b pb-2 mb-3">
         <input
           type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="채팅 검색..."
           className="flex-grow px-3 py-2 border-none rounded-md text-sm mr-2"
         />
@@ -433,15 +437,19 @@ function CheckModal({
 
       {/* Chat Content Area (예시) */}
       <div className="flex-1 overflow-y-auto bg-gray-100 p-3 space-y-2 rounded">
-        {modalChatList.map((chat, idx) =>
-          chat.sender_id === undefined || chat.sender_id === username ? (
-            <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
-          ) : (
-            <ChatBubbleOther key={idx} name={chat.sender_id}>
-              {chat.message}
-            </ChatBubbleOther>
+        {modalChatList
+          .filter((chat) =>
+            chat.message.toLowerCase().includes(searchQuery.toLowerCase())
           )
-        )}
+          .map((chat, idx) =>
+            chat.sender_id === undefined || chat.sender_id === username ? (
+              <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
+            ) : (
+              <ChatBubbleOther key={idx} name={chat.sender_id}>
+                {chat.message}
+              </ChatBubbleOther>
+            )
+          )}
       </div>
 
       {/* Footer Button */}

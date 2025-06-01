@@ -23,6 +23,7 @@ export default function ChatRoom() {
   const [chatList, setChatList] = useState([]);
   const [roomList, setRoomList] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(0);
+  const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
 
   const [buttonOnOff, setButtonOnOff] = useState([
     false,
@@ -53,6 +54,7 @@ export default function ChatRoom() {
   useEffect(() => {
     if (selectedRoom === 0) return;
     fetchChatHistory();
+    fetchRoomUsers();
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
@@ -79,6 +81,7 @@ export default function ChatRoom() {
     };
   }, [selectedRoom]);
 
+  // 4) 방 목록을 가져오는 함수
   const fetchRoomList = async () => {
     try {
       const res = await fetch("http://localhost:4000/api/v1/roomlist", {
@@ -93,7 +96,8 @@ export default function ChatRoom() {
       console.error("방 목록 요청 중 에러:", err);
     }
   };
-
+  
+  // 5) 선택된 방의 채팅 내역을 가져오는 함수
   const fetchChatHistory = async () => {
     try {
       const res = await fetch(
@@ -120,6 +124,7 @@ export default function ChatRoom() {
     }
   };
 
+  // 6) 채팅 메시지를 전송하는 함수
   const sendChat = () => {
     if (!socketRef.current) return;
 
@@ -134,6 +139,24 @@ export default function ChatRoom() {
 
     socketRef.current.emit("chatMsg", chatData);
     inputRef.current.value = "";
+  };
+
+  // 7) 선택한 채팅방의 유저 정보를 가져오는 함수
+  const fetchRoomUsers = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:4000/api/v1/rooms/${selectedRoom}/users`,
+        { method: "GET" }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setSelectedRoomUsers(data.data);
+      } else {
+        console.error("방 유저 정보 불러오기 실패:", data);
+      }
+    } catch (err) {
+      console.error("방 유저 정보 요청 중 에러:", err);
+    }
   };
 
   return (
@@ -153,6 +176,7 @@ export default function ChatRoom() {
           SetRoomList={setRoomList}
           selectedRoom={selectedRoom}
           SetSelectedRoom={setSelectedRoom}
+          selectedRoomUsers={selectedRoomUsers}
           username={username}
         />
       </div>

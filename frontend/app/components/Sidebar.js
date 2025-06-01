@@ -2,6 +2,7 @@ import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import ReactModal from "react-modal";
 import { AiOutlineUserAdd, AiOutlineUserDelete } from "react-icons/ai";
+import { LuUser } from "react-icons/lu";
 
 import logo_blue from "../../public/logo_blue.png";
 
@@ -10,6 +11,7 @@ export default function Sidebar({
   SetRoomList,
   selectedRoom,
   SetSelectedRoom,
+  selectedRoomUsers,
   username,
 }) {
   const [inviteUsername, SetInviteUsername] = useState("");
@@ -81,6 +83,12 @@ export default function Sidebar({
                 }
               >
                 {idx.room_name}
+                {isSelected && (
+                  <div className="flex items-center ml-auto text-[#84CDEE]">
+                    <LuUser className="inline mr-1 mb-1"/>
+                    {selectedRoomUsers.length}
+                  </div>
+                )}
               </button>
             );
           })}

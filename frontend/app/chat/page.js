@@ -343,7 +343,7 @@ function ChatBubbleOther({ name, children }) {
   return (
     <div className="flex flex-col items-start mb-2">
       <div className="text-sm font-semibold ml-2">{name}</div>
-      <div className="bg-sky-300 px-4 py-2 rounded-lg max-w-[70%] break-words ml-2">
+      <div className={`${name == "Sena" ? "bg-[#EAEAEA]" : "bg-[#86D9FE]"} px-4 py-2 rounded-lg max-w-[70%] break-words ml-2`}>
         {children}
       </div>
     </div>
@@ -354,7 +354,7 @@ function ChatBubbleOther({ name, children }) {
 function ChatBubbleMine({ children }) {
   return (
     <div className="flex flex-col items-end mb-2">
-      <div className="bg-sky-100 text-black px-4 py-2 rounded-2xl max-w-[70%] break-words text-left mr-2">
+      <div className="bg-[#CCEFFF] text-black px-4 py-2 rounded-2xl max-w-[70%] break-words text-left mr-2">
         {children}
       </div>
     </div>

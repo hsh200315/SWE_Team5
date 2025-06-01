@@ -62,6 +62,9 @@ export default function ChatRoom() {
 
   // 3) selectedRoom이 바뀔 때마다 소켓 재연결 및 기존 채팅 불러오기
   useEffect(() => {
+    setCheckedIds([]);
+    setButtonOnOff([false, false, false, false, false]);
+
     if (selectedRoom === 0) return;
     fetchChatHistory();
     fetchRoomUsers();
@@ -92,9 +95,10 @@ export default function ChatRoom() {
   }, [selectedRoom]);
 
   useEffect(() => {
+    setModalChatList(chatList);
     if (modalOnOff) {
-      setModalChatList(chatList);
       setCheckedIds([]);}
+    console.log(modalOnOff, checkedIds)
   }, [modalOnOff]);
 
   // 4) 방 목록을 가져오는 함수
@@ -277,9 +281,11 @@ export default function ChatRoom() {
 /*======== 채팅 버블 (Other) ========*/
 function ChatBubbleOther({ name, children }) {
   return (
-    <div className="text-black w-fit max-w-[70%]">
-      <div className="text-sm font-semibold">{name}</div>
-      <div className="bg-sky-300 px-4 py-2 rounded-lg w-fit">{children}</div>
+    <div className="flex flex-col items-start mb-2">
+      <div className="text-sm font-semibold ml-2">{name}</div>
+      <div className="bg-sky-300 px-4 py-2 rounded-lg max-w-[70%] break-words ml-2">
+        {children}
+      </div>
     </div>
   );
 }
@@ -287,8 +293,54 @@ function ChatBubbleOther({ name, children }) {
 /*======== 채팅 버블 (Mine) ========*/
 function ChatBubbleMine({ children }) {
   return (
-    <div className="flex justify-end mb-2 max-w-[70%]">
-      <div className="bg-sky-100 text-black px-4 py-2 rounded-2xl w-fit text-left">
+    <div className="flex flex-col items-end mb-2">
+      <div className="bg-sky-100 text-black px-4 py-2 rounded-2xl max-w-[70%] break-words text-left mr-2">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/*======== 모달채팅 버블 (Other) ========*/
+function ModalChatBubbleOther({ name, children, toggleCheck, checkedIds, chat }) {
+  return (
+    <div className="flex flex-col items-start mb-2">
+      <div className="text-sm font-semibold ml-2">{name}</div>
+      <div className="flex flex-row">
+        <div className="bg-sky-300 px-4 py-2 rounded-lg max-w-[100%] break-words ml-2">
+          {children}
+        </div>
+        <button
+          onClick={() => toggleCheck(chat.chat_id)}
+          className="ml-2 mt-3"
+        >
+          <GoCheckCircle
+            className={`text-xl ${
+              checkedIds.includes(chat.chat_id) ? "text-green-500" : "text-gray-300"
+            }`}
+          />
+        </button>
+      </div>
+      
+    </div>
+  );
+}
+
+/*======== 모달채팅 버블 (Mine) ========*/
+function ModalChatBubbleMine({ children, toggleCheck, checkedIds, chat }) {
+  return (
+    <div className="flex flex-row justify-end mb-2 w-[100%]">
+      <button
+        onClick={() => toggleCheck(chat.chat_id)}
+        className="mb-2 mr-2"
+      >
+        <GoCheckCircle
+          className={`text-xl ${
+            checkedIds.includes(chat.chat_id) ? "text-green-500" : "text-gray-300"
+          }`}
+        />
+      </button>
+      <div className="bg-sky-100 text-black px-4 py-2 rounded-2xl max-w-[70%] break-words text-left mr-2">
         {children}
       </div>
     </div>
@@ -364,9 +416,9 @@ function ButtonList({
       <div className="flex items-center justify-center">
         <button
           style={{
-            color: checkedIds.length == 0 ? "#ffffff" : "#8F8F8F",
-            borderColor: checkedIds.length == 0 ? "#4ade80" : "#D4D4D4",
-            backgroundColor: checkedIds.length == 0 ? "#4ade80" : "#ffffff",
+            color: checkedIds.length !== 0 ? "#ffffff" : "#8F8F8F",
+            borderColor: checkedIds.length !== 0 ? "#4ade80" : "#D4D4D4",
+            backgroundColor: checkedIds.length !== 0 ? "#4ade80" : "#ffffff",
           }}
           className="ml-[0.5rem] rounded-full border text-3xl transition-colors duration-200 border-none"
         >
@@ -463,33 +515,13 @@ function CheckModal({
           .map((chat, idx) =>
             chat.sender_id === username ? (
               <div className="flex justify-end mb-2 items-center" key={idx}>
-                <button
-                  onClick={() => toggleCheck(chat.chat_id)}
-                  className="mb-2 mr-2"
-                >
-                  <GoCheckCircle
-                    className={`text-xl ${
-                      checkedIds.includes(chat.chat_id) ? "text-green-500" : "text-gray-300"
-                    }`}
-                  />
-                </button>
-                <ChatBubbleMine>{chat.message}</ChatBubbleMine>
+                <ModalChatBubbleMine toggleCheck={toggleCheck} checkedIds={checkedIds} chat={chat}>{chat.message}</ModalChatBubbleMine>
               </div>
             ) : (
               <div className="flex justify-start mb-2 items-center" key={idx}>
-                <ChatBubbleOther key={idx} name={chat.sender_id}>
+                <ModalChatBubbleOther key={idx} name={chat.sender_id} toggleCheck={toggleCheck} checkedIds={checkedIds} chat={chat}>
                   {chat.message}
-                </ChatBubbleOther>
-                <button
-                  onClick={() => toggleCheck(chat.chat_id)}
-                  className="ml-2 mt-3"
-                >
-                  <GoCheckCircle
-                    className={`text-xl ${
-                      checkedIds.includes(chat.chat_id) ? "text-green-500" : "text-gray-300"
-                    }`}
-                  />
-                </button>
+                </ModalChatBubbleOther>
               </div>
             )
           )}

@@ -201,8 +201,8 @@ export default function ChatRoom() {
       {/*======= 채팅창 영역 =======*/}
       <main className="flex-1 bg-white pt-[7vh] pb-[20vh] px-[15vw] w-6/7">
         {selectedRoom === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            채팅방을 선택해주세요.
+          <div className="flex items-center justify-center h-full text-gray-500 text-3xl">
+            채팅방을 선택하거나, 새로운 채팅방을 만드세요!
           </div>
         ) : (
           <div ref={chatRef} className="space-y-2 w-full h-full overflow-y-auto">
@@ -232,20 +232,28 @@ export default function ChatRoom() {
                 72
               )}px`;
             }}
-            className="w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none"
+            disabled={selectedRoom === 0}
+            className={`w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none ${
+              selectedRoom === 0 ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
           />
           <div className="flex justify-between items-center">
-            <ButtonList
-              SetButtonOnOff={setButtonOnOff}
-              buttonOnOff={buttonOnOff}
-              SetModalOnOff={setModalOnOff}
-              chatChecked={chatChecked}
-              setChatChecked={setChatChecked}
-            />
+            <div className={selectedRoom === 0 ? "opacity-50 pointer-events-none" : ""}>
+              <ButtonList
+                SetButtonOnOff={setButtonOnOff}
+                buttonOnOff={buttonOnOff}
+                SetModalOnOff={setModalOnOff}
+                chatChecked={chatChecked}
+                setChatChecked={setChatChecked}
+              />
+            </div>
             <button
               onClick={sendChat}
+              disabled={selectedRoom === 0}
               style={{ backgroundColor: "#11B8FF" }}
-              className="p-2 rounded-2xl shadow text-white hover:bg-blue-600"
+              className={`p-2 rounded-2xl shadow text-white hover:bg-blue-600 ${
+                selectedRoom === 0 ? "opacity-50 cursor-not-allowed hover:bg-blue-600" : ""
+              }`}
             >
               <GoPaperAirplane className="text-base" />
             </button>

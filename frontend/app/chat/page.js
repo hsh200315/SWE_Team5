@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
+import Image from "next/image";
 import ReactModal from "react-modal";
+import logo_white from "../../public/logo_white.png";
 import {
   GoPaperAirplane,
   GoSearch,
@@ -342,7 +344,10 @@ export default function ChatRoom() {
 function ChatBubbleOther({ name, children }) {
   return (
     <div className="flex flex-col items-start mb-2">
-      <div className="text-sm font-semibold ml-2">{name}</div>
+      <div className="flex items-center">
+        {name=="Sena" && <Image src={logo_white} alt="logo" className="w-[5%] mr-1 ml-1" />}
+        <div className="text-sm font-semibold">{name}</div>
+      </div>
       <div className={`${name == "Sena" ? "bg-[#EAEAEA]" : "bg-[#86D9FE]"} px-4 py-2 rounded-lg max-w-[70%] break-words ml-2`}>
         {children}
       </div>

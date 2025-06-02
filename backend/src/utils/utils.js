@@ -1,4 +1,4 @@
-const { SECRET_KEY, BRAVE_API_KEY } = require('../config/env');
+const { SECRET_KEY, BRAVE_API_KEY, GOOGLE_API_KEY } = require('../config/env');
 const axios = require('axios');
 const crypto = require('crypto');
 function makeRoomId(roomId) {
@@ -37,10 +37,58 @@ async function getSearchResult(search){
 
 }
 
+async function getPlacesByTextSearch(query) {
+  const url = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
+  try {
+    const response = await axios.get(url, {
+      params: {
+        query: query,
+        language: 'ko',
+        key: GOOGLE_API_KEY
+      }
+    });
+
+    const places = response.data.results;
+    if (!places.length) {
+      console.log('📭 검색 결과가 없습니다.');
+      return;
+    }
+    return places;
+
+  } catch (error) {
+    console.error('API 호출 실패:', error.message);
+  }
+}
+
+async function collectTourist(destinations) {
+  const allResults = await Promise.all(destinations.map(async (item) => {
+    const destination = typeof item === "string" ? item : item.destination;
+    const query = `${destination} 관광지`;
+
+    const places = await getPlacesByTextSearch(query);
+
+    const simplifiedPlaces = places.map(place => ({
+      name: place.name,
+      rating: place.rating,
+      address: place.formatted_address,
+      url: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
+    }));
+
+    return {
+      destination: item.destination,
+      places: simplifiedPlaces,
+    };
+  }));
+
+  return allResults;
+}
+
 
 module.exports = {
     makeRoomId,
     encryptMessage,
     decryptMessage,
-    getSearchResult
+    getSearchResult,
+    getPlacesByTextSearch,
+    collectTourist,
 };

@@ -1,7 +1,8 @@
 const { success, failed } = require('../utils/response');
 const OpenAI = require("openai");
 const { OPENAI_API_KEY, BRAVE_API_KEY } = require('../config/env');
-const { getSearchResult } = require('../utils/utils');
+const { getSearchResult, getPlacesByTextSearch, collectTourist } = require('../utils/utils');
+const { askTourlist } = require("../AI_model/chat_ai");
 const chatModel = require('../models/chat.model')
 
 const openai = new OpenAI({
@@ -37,8 +38,8 @@ module.exports = {
         네 임무는 대화 내역과 현재 질문을 기반으로, AI가 이해하기 쉬운 구체적이고 명확한 여행 관련 질문으로 재작성하는 것이다.
 
         - 질문의 목적(예: 장소 추천, 예산 계획, 일정 조정 등)을 파악해 명확히 표현해야 해.
+        - 만약 LLM이 답변을 도출할 때 필요한 정보가 부족하다면 어떤 정보가 포함되어야 하는지 알려줘야 해.
         - 생략된 지명, 일정, 동행 여부, 관심사 등이 대화에 있다면 반드시 반영해.
-        - 여행 관련 정보 종류는 크게 여행지, 숙소, 음식점, 항공편, 교통편이야 만약 질문에 여러 종류의 질문이 포함되어있다면 하나씩 질문해달라고 답변해야 해.
         - 여행과 무관한 정보는 포함하지 마.
         - 결과는 개선된 질문만 출력하고, 그 외 설명이나 서술은 하지 마.
         - 출력은 존댓말이 아닌 자연스럽고 부드러운 반말체로 작성해.
@@ -89,20 +90,30 @@ module.exports = {
 
       사용자의 질문에는 하나 이상의 유형이 포함될 수 있고, 포함되지 않은 항목은 출력에 포함되지 않아야 한다. 질문에 유형이 포함되어 있다면 각 항목은 아래와 같이 응답해야 한다:
 
-      - travel_destination: '도시'나 '나라'와 같은 지역을 추천해달라는 질문에 해당한다. llm에 물어보기 적합하도록, 사용자의 의도를 담은 문장을 생성해 제공한다. 사용자의 질문에 개수 관련 요청이 있다면 문장 생성 시 반영한다.
-      - tourist_attraction: 도시 내에서 관광하기 좋은 곳을 추천해달라는 질문에 해당한다. llm에 물어보기 적합하도록, 사용자의 의도를 담은 문장을 생성해 제공한다. 사용자의 질문에 개수 관련 요청이 있다면 문장 생성 시 반영한다.
+      - travel_destination: 국가나 도시 등 거시적 이동을 전제로 한 추천일 때 채운다. llm에 물어보기 적합하도록, 사용자의 의도를 담은 문장을 생성해 제공한다. 사용자의 질문에 추천 개수 관련 표현(예: 몇 군데, 3곳, 여러 군데, 다수 등)이 포함된 경우 반드시 해당 개수 요청을 travel_destination에 포함하여 문장을 생성한다.
+      - tourist_attraction: 특정 도시 내부에서 관광할 만한 장소 추천 요청일 때 채운다. 특정 도시들에 대한 명시가 있다면 해당 도시들을 추출해서 배열 형태로 나열한다. 도시에 대한 명시가 되어있지 않다면 key만 명시하고 value는 비워둔다.
+      - 사용자가 특정 도시 이름을 명시한 경우 tourist_attraction으로 우선 분류한다.
       - 특히, 여행지나 관광 명소에 대한 질문이 없으면서 검색 위치도 명확하지 않은 경우 교통편, 항공편, 숙소, 음식점은 x로 표기한다.
       - transportation: 출발지와 도착지를 명시한다. 복수의 이동 경로가 포함되어 있다면 시간 순서대로 배열한다.
-      - flight: 출발지와 도착지를 명시한다. 명시되지 않으면 출발지는 '서울', 도착지는 'x'으로 기록한다.
+      - flight: 출발지와 도착지를 명시한다. 각각이 명시되지 않았다면 출발지는 '서울', 도착지는 'x'으로 기록한다.
       - accommodation: 구체적인 검색 위치가 있다면 사용자의 의도에 맞게 검색할 수 있는 짧은 문장을 생성한다. 만약 구체적인 검색 위치(지역명)가 명확하지 않지만 여행지나 관광 명소에 대한 질문이 포함되어 있는 경우 "{location}"으로 표시하고, 사용자의 의도를 포함하는 간단한 설명을 포함한다.
       - restaurant: 구체적인 검색 위치가 있다면 사용자의 의도에 맞게 검색할 수 있는 짧은 문장을 생성한다. 만약 구체적인 검색 위치(지역명)가 명확하지 않지만 여행지나 관광 명소에 대한 질문이 포함되어 있는 경우 "{location}"으로 표시하고, 관련 설명을 포함한다.
-      - extra: 사용자의 채팅내역과 질문에서 llm에게 질문 시 알아야할 추가적인 정보(여행 기간 등)를 생성한다.
+      - extra: 사용자의 채팅내역과 질문에서 여행 일정 추천 시 필요한 추가 정보를 반드시 추출하여 포함한다.
+        - 포함해야 할 정보: 
+          - 여행 기간
+          - 예산
+          - 사용자가 원하는 여행지의 특징 (예: 자연 경관, 액티비티, 휴양, 역사 유적, 관광지 다양성, 혼잡도 등)
+          - 특별한 요청사항 (예: 가족 여행, 커플 여행, 아이 동반 등)
+        - 사용자의 질문 안에 이러한 정보가 조금이라도 언급되면 반드시 extra에 해당 문구를 그대로 포함해서 출력한다.
+        - 관련 정보가 없을 경우 해당 항목은 포함하지 않는다.
 
       아래 형식은 예시이며, 출력 형식은 반드시 순수한 JSON 텍스트만 반환해야 하며, 다른 설명, 문장, 코드 블록 표시, 기호 \` 등을 절대 포함하지 않는다.
 
       {
         "travel_destination": "예시 응답",
-        "tourist_attraction": "예시 응답",
+        "tourist_attraction": [
+          "제주도", "서울", "부산", ...
+        ],
         "transportation": [
           {"출발지": "남산타워", "도착지": "강남역"},
           {"출발지": "강남역", "도착지": "명동"}
@@ -110,7 +121,7 @@ module.exports = {
         "flight": {"출발지": "서울", "도착지": "오키나와"},
         "accommodation": "제주 중문 바다 전망 숙소",
         "restaurant": "대전 칼국수 맛집",
-        "extra": "여행 기간 4일"
+        "extra": "여행 기간 4일, 자연경관"
       }
       `;
 
@@ -159,7 +170,9 @@ module.exports = {
         console.error("JSON 파싱 실패:", e);
       }
       if("tourist_attraction" in parsing_result){
-
+        const allResults = await collectTourist(recommendedList);
+        const tourist = await askTourlist(allResults, parsing_result.extra);
+        console.log(tourist);
       }
       
     }

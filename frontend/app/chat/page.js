@@ -33,7 +33,6 @@ export default function ChatRoom() {
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [openMenuRoom, setOpenMenuRoom] = useState(false);
-  
 
   const [buttonOnOff, setButtonOnOff] = useState([
     false,
@@ -130,7 +129,8 @@ export default function ChatRoom() {
   useEffect(() => {
     setModalChatList(chatList);
     if (modalOnOff) {
-      setCheckedIds([]);}
+      setCheckedIds([]);
+    }
   }, [modalOnOff]);
 
   // 4) 방 목록을 가져오는 함수
@@ -216,8 +216,7 @@ export default function ChatRoom() {
 
   const handleInvite = (frinedList) => {
     if (frinedList == []) return;
-    socketRef.current.on("invite", (data) => {
-    });
+    socketRef.current.on("invite", (data) => {});
     socketRef.current.on("invite-error", (error) => {
       alert("초대에 실패하였습니다: " + error);
     });
@@ -227,8 +226,7 @@ export default function ChatRoom() {
   };
 
   const handleLeave = () => {
-    socketRef.current.on("leave", (data) => {
-    });
+    socketRef.current.on("leave", (data) => {});
     socketRef.current.on("leave-error", (error) => {
       alert("방 나가기에 실패하였습니다: " + error);
     });
@@ -345,10 +343,16 @@ function ChatBubbleOther({ name, children }) {
   return (
     <div className="flex flex-col items-start mb-2">
       <div className="flex items-center">
-        {name=="Sena" && <Image src={logo_white} alt="logo" className="w-[5%] mr-1 ml-1" />}
+        {name == "Sena" && (
+          <Image src={logo_white} alt="logo" className="w-[5%] mr-1 ml-1" />
+        )}
         <div className="text-sm font-semibold">{name}</div>
       </div>
-      <div className={`${name == "Sena" ? "bg-[#EAEAEA]" : "bg-[#86D9FE]"} px-4 py-2 rounded-lg max-w-[70%] break-words ml-2`}>
+      <div
+        className={`${
+          name == "Sena" ? "bg-[#EAEAEA]" : "bg-[#86D9FE]"
+        } px-4 py-2 rounded-lg max-w-[70%] break-words ml-2`}
+      >
         {children}
       </div>
     </div>
@@ -367,7 +371,13 @@ function ChatBubbleMine({ children }) {
 }
 
 /*======== 모달채팅 버블 (Other) ========*/
-function ModalChatBubbleOther({ name, children, toggleCheck, checkedIds, chat }) {
+function ModalChatBubbleOther({
+  name,
+  children,
+  toggleCheck,
+  checkedIds,
+  chat,
+}) {
   return (
     <div className="flex flex-col items-start mb-2 w-[100%]">
       <div className="text-sm font-semibold ml-2">{name}</div>
@@ -375,18 +385,16 @@ function ModalChatBubbleOther({ name, children, toggleCheck, checkedIds, chat })
         <div className="bg-sky-300 px-4 py-2 rounded-lg max-w-[70%] break-words ml-2">
           {children}
         </div>
-        <button
-          onClick={() => toggleCheck(chat.chat_id)}
-          className="ml-2 mt-3"
-        >
+        <button onClick={() => toggleCheck(chat.chat_id)} className="ml-2 mt-3">
           <GoCheckCircle
             className={`text-xl ${
-              checkedIds.includes(chat.chat_id) ? "text-green-500" : "text-gray-300"
+              checkedIds.includes(chat.chat_id)
+                ? "text-green-500"
+                : "text-gray-300"
             }`}
           />
         </button>
       </div>
-      
     </div>
   );
 }
@@ -395,13 +403,12 @@ function ModalChatBubbleOther({ name, children, toggleCheck, checkedIds, chat })
 function ModalChatBubbleMine({ children, toggleCheck, checkedIds, chat }) {
   return (
     <div className="flex flex-row justify-end mb-2 w-[100%]">
-      <button
-        onClick={() => toggleCheck(chat.chat_id)}
-        className="mb-2 mr-2"
-      >
+      <button onClick={() => toggleCheck(chat.chat_id)} className="mb-2 mr-2">
         <GoCheckCircle
           className={`text-xl ${
-            checkedIds.includes(chat.chat_id) ? "text-green-500" : "text-gray-300"
+            checkedIds.includes(chat.chat_id)
+              ? "text-green-500"
+              : "text-gray-300"
           }`}
         />
       </button>
@@ -579,12 +586,30 @@ function CheckModal({
           )
           .map((chat, idx) =>
             chat.sender_id === username ? (
-              <div className="flex justify-end mb-2 items-center w-[100%]" key={idx}>
-                <ModalChatBubbleMine toggleCheck={toggleCheck} checkedIds={checkedIds} chat={chat}>{chat.message}</ModalChatBubbleMine>
+              <div
+                className="flex justify-end mb-2 items-center w-[100%]"
+                key={idx}
+              >
+                <ModalChatBubbleMine
+                  toggleCheck={toggleCheck}
+                  checkedIds={checkedIds}
+                  chat={chat}
+                >
+                  {chat.message}
+                </ModalChatBubbleMine>
               </div>
             ) : (
-              <div className="flex justify-start mb-2 items-center w-[100%]" key={idx}>
-                <ModalChatBubbleOther key={idx} name={chat.sender_id} toggleCheck={toggleCheck} checkedIds={checkedIds} chat={chat}>
+              <div
+                className="flex justify-start mb-2 items-center w-[100%]"
+                key={idx}
+              >
+                <ModalChatBubbleOther
+                  key={idx}
+                  name={chat.sender_id}
+                  toggleCheck={toggleCheck}
+                  checkedIds={checkedIds}
+                  chat={chat}
+                >
                   {chat.message}
                 </ModalChatBubbleOther>
               </div>

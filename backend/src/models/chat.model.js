@@ -5,7 +5,7 @@ module.exports = {
     chatlist: async(data) => {
         const {roomId} = data;
         try {
-            const result = await all('SELECT * FROM Chat WHERE room_id = ? ORDER BY timestamp DESC', [roomId]);
+            const result = await all('SELECT * FROM Chat WHERE room_id = ? ORDER BY chat_id DESC', [roomId]);
             return result;
         } catch(err) {
             return new Error(err);

@@ -15,6 +15,7 @@ import {
   GoFile,
 } from "react-icons/go";
 import { AiOutlineFilter } from "react-icons/ai";
+import { LuLoader } from "react-icons/lu";
 
 import Sidebar from "../components/Sidebar";
 
@@ -43,6 +44,15 @@ export default function ChatRoom() {
   ]);
   const [modalOnOff, setModalOnOff] = useState(false);
   const [checkedIds, setCheckedIds] = useState([]);
+
+  useEffect(() => {
+    if (chatRef.current) {
+        chatRef.current.scrollTo({
+          top: chatRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+  }, [aiGenerating]);
 
   // 1) 컴포넌트 마운트 시 sessionStorage에서 username 읽어오기
   useEffect(() => {
@@ -272,7 +282,7 @@ export default function ChatRoom() {
         ) : (
           <div
             ref={chatRef}
-            className="space-y-2 w-full h-full overflow-y-auto pb-[20vh]"
+            className="space-y-2 w-full h-full overflow-y-auto pb-[10vh]"
           >
             {chatList.map((chat, idx) =>
               chat.sender_id === username ? (
@@ -282,6 +292,20 @@ export default function ChatRoom() {
                   {chat.message}
                 </ChatBubbleOther>
               )
+            )}
+            {aiGenerating && (
+              <div className="flex flex-col w-full h-[30%]">
+                <div className="flex flex-row items-center w-[100%]">
+                  <Image src={logo_white} alt="logo" className="w-[5%] mr-1 ml-1" />
+                  <div className="font-semibold">Sena</div>
+                </div>
+                <div className="flex justify-center items-center w-[100%] bg-[#EAEAEA] mt-2 h-[80%] rounded-lg text-2xl">
+                  <div className="animate-pulse flex flex-row items-center space-x-2"> 
+                    <LuLoader /> 
+                    <span>AI가 답변을 생성 중입니다...</span>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}

@@ -93,8 +93,8 @@ export default function Home() {
             <span
               style={{
                 fontFamily: "Roboto, sans-serif",
-                fontWeight: 200,
-                fontSize: "100%",
+                fontWeight: 250,
+                fontSize: "1.7vw",
                 color: "#84CDEE",
               }}
             >
@@ -107,15 +107,15 @@ export default function Home() {
             onChange={(e) => setUsername(e.target.value)}
             value={username}
             style={{
-              width: "18vw",
+              width: "16vw",
               height: "40px",
               padding: "8px 12px",
               borderRadius: "5px",
-              border: "1px solid #84CDEE",
+              border: "1px solid #A0CFE4",
               outline: "none",
-              fontSize: "12px",
+              fontSize: "0.8vw",
               fontFamily: "Roboto, sans-serif",
-              color: "#84CDEE",
+              color: "#A0CFE4",
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -127,14 +127,14 @@ export default function Home() {
           <button
             onClick={OnClickEvent}
             style={{
-              width: "18vw",
+              width: "16vw",
               height: "40px",
               padding: "8px 12px",
               borderRadius: "20px",
               border: "none",
-              backgroundColor: "#84CDEE",
+              backgroundColor: "#50B8E7",
               outline: "none",
-              fontSize: "12px",
+              fontSize: "1vw",
               fontFamily: "Roboto, sans-serif",
               color: "white",
               fontWeight: 700,

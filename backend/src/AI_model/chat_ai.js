@@ -63,11 +63,97 @@ async function askTourlist(allResults, extraInfo) {
 
   try {
     const raw = completion.choices[0].message.content.trim();
-    const finalResult = JSON.parse(raw);
-    return finalResult;
+    const result = JSON.parse(raw);
+    return result;
   } catch (e) {
     console.error("JSON 파싱 실패:", e);
   }
 }
 
-module.exports = { streamChat, askTourlist };
+async function askAccommodation(allResults, extraInfo) {
+  const systemPrompt = `
+    너는 여행 전문가야. 아래 여러 지역의 숙소 후보 리스트를 보고 각 지역마다 사용자의 의도에 맞게 숙소를 추천해줘.
+    반드시 다음과 같은 JSON 형태로 출력해:
+    {
+      "지역명1": [
+        {"name": "숙소명", "reason": "추천 이유", "url": "https://..."},
+        ...
+      ],
+      "지역명2": [
+        ...
+      ]
+    }
+    다른 텍스트, 설명, 마크다운 없이 **순수 JSON 배열만 출력**해야 한다. 다른 설명, 문장, 코드 블록 표시, 기호 \` 등을 절대 포함하지 않는다.
+  `;
+
+  let userInput = `다음은 지역별 숙소 후보와 사용자의 요청이다:\n\n`;
+
+  for (const result of allResults) {
+    userInput += `지역: ${result.destination}\n`;
+    userInput += `후보 리스트: ${JSON.stringify(result.places)}\n\n`;
+  }
+  userInput += `\n사용자의 요청에 대한 추가 정보 : ${extraInfo}`;
+  console.log(userInput);
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userInput }
+    ],
+    temperature: 0.3
+  });
+
+  try {
+    const raw = completion.choices[0].message.content.trim();
+    const result = JSON.parse(raw);
+    return result;
+  } catch (e) {
+    console.error("JSON 파싱 실패:", e);
+  }
+}
+
+async function askRestaurant(allResults, extraInfo) {
+  const systemPrompt = `
+    너는 여행 전문가야. 아래 여러 지역의 음식점 리스트를 보고 각 지역마다 사용자의 의도에 맞게 음식점을 추천해줘.
+    반드시 다음과 같은 JSON 형태로 출력해:
+    {
+      "지역명1": [
+        {"name": "음식점명", "reason": "추천 이유", "url": "https://..."},
+        ...
+      ],
+      "지역명2": [
+        ...
+      ]
+    }
+    다른 텍스트, 설명, 마크다운 없이 **순수 JSON 배열만 출력**해야 한다. 다른 설명, 문장, 코드 블록 표시, 기호 \` 등을 절대 포함하지 않는다.
+  `;
+
+  let userInput = `다음은 지역별 음식점 후보와 사용자의 요청이다:\n\n`;
+
+  for (const result of allResults) {
+    userInput += `지역: ${result.destination}\n`;
+    userInput += `후보 리스트: ${JSON.stringify(result.places)}\n\n`;
+  }
+  userInput += `\n사용자의 요청에 대한 추가 정보 : ${extraInfo}`;
+  console.log(userInput);
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userInput }
+    ],
+    temperature: 0.3
+  });
+
+  try {
+    const raw = completion.choices[0].message.content.trim();
+    const result = JSON.parse(raw);
+    return result;
+  } catch (e) {
+    console.error("JSON 파싱 실패:", e);
+  }
+}
+
+
+
+module.exports = { streamChat, askTourlist, askAccommodation, askRestaurant };

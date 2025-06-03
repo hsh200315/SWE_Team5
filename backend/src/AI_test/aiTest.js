@@ -24,11 +24,11 @@ const axios = require('axios');
 
 const payload = {
   chat_history: [
-    { username: "user1", message: "가족이랑 8월 초에 국내로 여행 가려고 해" },
-    { username: "user2", message: "가족 여행 좋지! 어떤 지역이 좋을까까?" },
-    { username: "user1", message: "자연 풍경이 좋았으면 해" }
+    // { username: "user1", message: "가족이랑 8월 초에 국내로 여행 가려고 해" },
+    // { username: "user2", message: "가족 여행 좋지! 어떤 지역이 좋을까까?" },
+    // { username: "user1", message: "자연 풍경이 좋았으면 해" }
   ],
-  user_question: "여행지 몇 군데 추천해줘 그리고 각 여행지에서 갈만한 곳들 추천해줘"
+  user_question: "남산타워에서 강남역 가는 방법"
 };
 
 axios.post('http://localhost:4000/api/v1/ai/ai-test', payload)

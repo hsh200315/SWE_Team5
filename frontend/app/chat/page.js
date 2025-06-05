@@ -93,7 +93,14 @@ export default function ChatRoom() {
     socketRef.current.on("chatMsg", (data) => {
       setChatList((prev) => [
         ...prev,
-        { sender_id: data.sender_id, message: data.message },
+        { chat_id: data.chat_id,
+          is_plan: data.is_plan,
+          map_image: data.map_image,
+          message: data.message,
+          room_id: data.room_id,
+          sender_id: data.sender_id,
+          timestamp: data.timestamp
+        },
       ]);
       if (chatRef.current) {
         chatRef.current.scrollTo({

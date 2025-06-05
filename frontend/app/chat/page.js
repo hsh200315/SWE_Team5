@@ -34,6 +34,7 @@ export default function ChatRoom() {
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [openMenuRoom, setOpenMenuRoom] = useState(false);
+  const [promptRecommend, setPromptRecommend] = useState('')
 
   const [buttonOnOff, setButtonOnOff] = useState([
     false,
@@ -251,6 +252,28 @@ export default function ChatRoom() {
     setOpenMenuRoom(null);
   };
 
+  const RecommendPrompt = async () => {
+    try {
+      const text = inputRef.current.value.trim();
+      if (!text) return;
+
+      const res = await fetch("http://localhost:4000/api/v1/ai/prompt-generation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatHistory:checkedIds, msg:text }),
+      });
+      const data = await res.json();
+      console.log(data)
+      if (res.ok) {
+        setPromptRecommend(data.prompt);
+      } else {
+        console.error("프롬프트 추천 실패:", data);
+      }
+    } catch (err) {
+      console.error("프롬프트 추천 중 에러:", err);
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/*======= 모달창 =======*/}
@@ -348,6 +371,7 @@ export default function ChatRoom() {
                 SetModalOnOff={setModalOnOff}
                 checkedIds={checkedIds}
                 setCheckedIds={setCheckedIds}
+                RecommendPrompt={RecommendPrompt}
               />
             </div>
             <button
@@ -457,6 +481,7 @@ function ButtonList({
   SetModalOnOff,
   checkedIds,
   setCheckedIds,
+  RecommendPrompt
 }) {
   const buttonTitle = [
     "AI에게 물어보기",
@@ -473,13 +498,17 @@ function ButtonList({
           return (
             <button
               key={idx}
-              onClick={() =>
-                SetButtonOnOff((prev) => {
-                  const copy = [...prev];
-                  copy[idx] = !copy[idx];
-                  return copy;
-                })
-              }
+              onClick={() => {
+                if (idx === 1) {
+                  RecommendPrompt();
+                } else {
+                  SetButtonOnOff((prev) => {
+                    const copy = [...prev];
+                    copy[idx] = !copy[idx];
+                    return copy;
+                  });
+                }
+              }}
               style={{ borderColor: "#D4D4D4" }}
               className={`px-3 py-1 rounded-full border text-sm ${
                 buttonOnOff[idx] ? "bg-sky-400" : "bg-white"

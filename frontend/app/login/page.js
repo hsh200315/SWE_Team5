@@ -80,15 +80,20 @@ export default function Home() {
             transform: "translate(-50%,-50%)",
             display: "flex",
             flexDirection: "column",
-            gap: "15px",
+            gap: "1vh",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             <Image
               src="/logo_white.png"
               alt="login page_logo"
-              width="50"
-              height="50"
+              style={{
+                width: '2.7vw',
+                height: '2.7vw',
+                objectFit: 'contain',
+              }}
+              width={500}
+              height={500}
             />
             <span
               style={{
@@ -108,9 +113,9 @@ export default function Home() {
             value={username}
             style={{
               width: "16vw",
-              height: "40px",
+              height: "5vh",
               padding: "8px 12px",
-              borderRadius: "5px",
+              borderRadius: "0.4vh",
               border: "1px solid #A0CFE4",
               outline: "none",
               fontSize: "0.8vw",
@@ -128,8 +133,8 @@ export default function Home() {
             onClick={OnClickEvent}
             style={{
               width: "16vw",
-              height: "40px",
-              padding: "8px 12px",
+              height: "5vh",
+              // padding: "8px 12px",
               borderRadius: "20px",
               border: "none",
               backgroundColor: "#50B8E7",

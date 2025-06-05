@@ -368,9 +368,9 @@ function ChatBubbleOther({ name, children }) {
     <div className="flex flex-col items-start mb-2">
       <div className="flex items-center">
         {name == "Sena" && (
-          <Image src={logo_white} alt="logo" className="w-[5%] mr-1 ml-1" />
+          <Image src={logo_white} alt="logo" className="h-[2em] w-auto ml-1" />
         )}
-        <div className="text-sm font-semibold">{name}</div>
+        <div className="pl-2 font-semibold">{name}</div>
       </div>
       <div
         className={`${

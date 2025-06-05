@@ -126,7 +126,7 @@ export default function Sidebar({
                         e.stopPropagation();
                         setOpenMenuRoom(openMenuRoom === idx.room_id ? null : idx.room_id);
                       }}
-                      className={ isSelected ? "ml-1 text-xl hover:bg-white hover:text-[#84CDEE] rounded" :"ml-auto text-xl hover:bg-white hover:text-[#84CDEE] rounded"}
+                      className={ isSelected ? "ml-1 px-2 text-xl hover:bg-white hover:text-[#84CDEE] rounded" :"ml-auto text-xl hover:bg-white hover:text-[#84CDEE] rounded"}
                       title="메뉴 열기"
                       type="button"
                     >

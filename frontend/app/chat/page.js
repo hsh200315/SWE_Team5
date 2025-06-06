@@ -116,6 +116,7 @@ export default function ChatRoom() {
         const lastIndex = prev.length - 1;
         if (lastIndex >= 0 && prev[lastIndex].sender_id === data.sender_id) {
           const updated = [...prev];
+          setAiGenerating(false)
           const lastMessage = updated[lastIndex];
           updated[lastIndex] = {
             sender_id: lastMessage.sender_id,

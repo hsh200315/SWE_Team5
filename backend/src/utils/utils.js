@@ -1,4 +1,5 @@
-const { SECRET_KEY, BRAVE_API_KEY, GOOGLE_API_KEY } = require('../config/env');
+const { SECRET_KEY, BRAVE_API_KEY, GOOGLE_API_KEY, RAPID_API_KEY, AMADEUS_API_KEY, AMADEUS_SECRET } = require('../config/env');
+const { askOpenAIForIATA } = require("../AI_model/chat_ai");
 const axios = require('axios');
 const crypto = require('crypto');
 function makeRoomId(roomId) {
@@ -85,7 +86,7 @@ async function collectTourist(destinations) {
 
 async function collectPlaces(questions, destinations) {
   const allResults = await Promise.all(destinations.map(async (item) => {
-    const destination = item.destination;
+    const destination = typeof item === "string" ? item : item.destination;
     const placeResults = await Promise.all(questions.map(async (template) => {
       const query = template.replace("{location}", destination);
 
@@ -177,8 +178,185 @@ async function getAllTransitDirections(transportationList) {
 
     const results = await Promise.all(promises);
 
-    // null이 포함될 수도 있으므로 필터링 (API 실패 대비)
     return results;
+}
+
+const iataCache = new Map();
+
+async function getAirportIATA(city) {
+  if (iataCache.has(city) && iataCache.get(city)!="null") {
+    return iataCache.get(city);
+  }
+
+  const url = `https://aerodatabox.p.rapidapi.com/airports/search/term?q=${encodeURIComponent(city)}&limit=1`;
+
+  const options = {
+    headers: {
+      'X-RapidAPI-Key': RAPID_API_KEY,
+      'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com'
+    }
+  };
+
+  const response = await axios.get(url, options);
+  const items = response.data.items;
+
+  if (items.length > 0) {
+    iata = items[0].iata;
+  } 
+  else {
+    iata = await askOpenAIForIATA(city);
+  }
+  iataCache.set(city, iata);
+  return iata;
+}
+
+
+async function processIATA(flights, locations) {
+  const result = [];
+
+  const departureCities = flights
+    .filter(f => f.departure !== '{location}')
+    .map(f => f.departure_eng);
+
+  const destinationCities = flights
+    .filter(f => f.destination !== '{location}')
+    .map(f => f.destination_eng);
+  const locationCities = locations
+  ? locations.map(loc => {
+      if (typeof loc === 'string') {
+        return loc;
+      } else {
+        return loc.destination_eng;
+      }
+    })
+  : [];
+  const uniqueCities = [...new Set([...departureCities, ...destinationCities, ...locationCities])];
+  for (const city of uniqueCities) {
+    await getAirportIATA(city);
+  }
+  
+
+  for (const flight of flights) {
+    const { departure, departure_eng, destination, destination_eng, departure_date } = flight;
+
+    const isDepartureLocation = departure === '{location}';
+    const isDestinationLocation = destination === '{location}';
+
+    if (isDepartureLocation) {
+      for (const loc of locations) {
+        const depVal = loc.destination_eng;
+        const depIata = await getAirportIATA(depVal);
+        const destIata = await getAirportIATA(destination_eng);
+
+        result.push({
+          departure: loc.destination,
+          departure_iata: depIata,
+          destination,
+          destination_iata: destIata,
+          departure_date
+        });
+      }
+    }
+    else if (isDestinationLocation) {
+      for (const loc of locations) {
+        const destVal = loc.destination_eng;
+        const depIata = await getAirportIATA(departure_eng);
+        const destIata = await getAirportIATA(destVal);
+
+        result.push({
+          departure,
+          departure_iata: depIata,
+          destination: loc.destination,
+          destination_iata: destIata,
+          departure_date
+        });
+      }
+    } else {
+      const depIata = await getAirportIATA(departure_eng);
+      const destinationIata = await getAirportIATA(destination_eng);
+
+      result.push({
+        departure,
+        departure_iata: depIata,
+        destination,
+        destination_iata: destinationIata,
+        departure_date
+      });
+    }
+  }
+  return result;
+}
+
+const qs = require('qs');
+let accessToken = null;
+let tokenExpireTime = 0;
+
+async function getAmadeusToken() {
+  const now = Date.now();
+
+  if (accessToken && now < tokenExpireTime) {
+    return accessToken;
+  }
+
+  const tokenRes = await axios.post('https://test.api.amadeus.com/v1/security/oauth2/token',
+    qs.stringify({
+      grant_type: 'client_credentials',
+      client_id: AMADEUS_API_KEY,
+      client_secret: AMADEUS_SECRET
+    }),
+    {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }
+  );
+
+  accessToken = tokenRes.data.access_token;
+  tokenExpireTime = now + (tokenRes.data.expires_in * 1000);
+
+  return accessToken;
+}
+
+async function searchFlights(originIATA, destinationIATA, departureDate) {
+  const token = await getAmadeusToken();
+  const searchUrl = `https://test.api.amadeus.com/v2/shopping/flight-offers`;
+
+  const response = await axios.get(searchUrl, {
+    headers: { Authorization: `Bearer ${token}` },
+    params: {
+      originLocationCode: originIATA,
+      destinationLocationCode: destinationIATA,
+      departureDate: departureDate,
+      adults: 1,
+      currencyCode: 'KRW',
+      max: 5
+    }
+  });
+
+  const offers = response.data.data.map(offer => {
+    const itinerary = offer.itineraries[0];
+    const segments = itinerary.segments;
+
+    // 전체 segment 경유지 파싱
+    const segmentDetails = segments.map(segment => ({
+      departureAirport: segment.departure.iataCode,
+      departureTime: segment.departure.at,
+      arrivalAirport: segment.arrival.iataCode,
+      arrivalTime: segment.arrival.at,
+      airline: segment.carrierCode,
+      flightNumber: segment.number,
+      duration: segment.duration
+    }));
+
+    return {
+      price: offer.price.total,
+      currency: offer.price.currency,
+      totalDuration: itinerary.duration,
+      segments: segmentDetails
+    };
+  });
+
+  return offers;
 }
 
 module.exports = {
@@ -189,5 +367,7 @@ module.exports = {
     getPlacesByTextSearch,
     collectTourist,
     collectPlaces,
-    getAllTransitDirections
+    getAllTransitDirections,
+    processIATA,
+    searchFlights,
 };

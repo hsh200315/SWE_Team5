@@ -1,8 +1,8 @@
 const { success, failed } = require('../utils/response');
 const OpenAI = require("openai");
 const { OPENAI_API_KEY, BRAVE_API_KEY } = require('../config/env');
-const { getSearchResult, getPlacesByTextSearch, collectTourist, collectPlaces, getAllTransitDirections } = require('../utils/utils');
-const { askTourlist, askAccommodation, askRestaurant } = require("../AI_model/chat_ai");
+const { getSearchResult, getPlacesByTextSearch, collectTourist, collectPlaces, getAllTransitDirections, processIATA, searchFlights } = require('../utils/utils');
+const { askTourlist, askAccommodation, askRestaurant, parseUserQuestion } = require("../AI_model/chat_ai");
 const chatModel = require('../models/chat.model')
 
 const openai = new OpenAI({
@@ -75,133 +75,68 @@ module.exports = {
 
   questionParsing: async(req, res) => {
     const { chat_history, user_question } = req.body;
+    let recommendedList;
     let tourist;
     let accommodation;
     let restaurant;
-    // chat_history를 문자열로 변환
-    const formattedHistory = chat_history.map(msg => `${msg.username}: ${msg.message}`).join('\n');
-    const systemPrompt = `
-      너는 사용자의 여행 관련 질문을 아래 6가지 유형으로 분류하는 역할을 한다:
-      1. travel_destination
-      2. tourist_attraction
-      3. transportation
-      4. flight
-      5. accommodation
-      6. restaurant
-      7. extra
-
-      사용자의 질문에는 하나 이상의 유형이 포함될 수 있고, 포함되지 않은 항목은 출력에 포함되지 않아야 한다. 질문에 유형이 포함되어 있다면 각 항목은 아래와 같이 응답해야 한다:
-
-      - travel_destination: 국가나 도시 등 거시적 이동을 전제로 한 추천일 때 채운다. llm에 물어보기 적합하도록, 사용자의 의도를 담은 문장을 생성해 제공한다. 사용자의 질문에 추천 개수 관련 표현(예: 몇 군데, 3곳, 여러 군데, 다수 등)이 포함된 경우 반드시 해당 개수 요청을 travel_destination에 포함하여 문장을 생성한다.
-      - tourist_attraction: 특정 도시 내부에서 "관광"할 만한 "장소 추천 요청"일 때만 항목을 생성한다. 특정 도시들에 대한 명시가 있다면 해당 도시들을 추출해서 배열 형태로 나열한다. 도시에 대한 명시가 되어있지 않다면 key만 명시하고 value는 비워둔다. 관광지에 대한 장소 추천 요청, 질문이 아닌 경우 이 항목은 출력하지 않는다.
-      - 사용자가 특정 도시 이름을 명시하며 장소 추천을 하는 경우 tourist_attraction으로 우선 분류한다.
-      - transportation: departure와 destination을 명시한다. 복수의 이동 경로가 포함되어 있다면 시간 순서를 추측해서 배열한다.
-      - flight: departure와 destination을 명시한다. 각각이 명시되지 않았다면 출발지는 '서울', destination은 'x'으로 기록한다.
-      - accommodation: 사용자의 요청을 기반으로 반드시 **지역명 + 숙소 키워드가 포함된 간결한 검색 문장**의 배열 형태로 작성한다. 예를 들어 ['서울 숙소'], ['제주 중문 호텔'], ['부산 해운대 가족 호텔']처럼 작성한다. travel_destination이나 tourist_attraction 항목이 있으면서 검색 위치가 명확하지 않은 경우에는 '{location} 숙소'처럼 작성한다. 그 외 검색 위치가 명확하지 않은 경우에는 아무것도 출력하지 않고 'x'만 출력한다. 여러 지역에 대한 숙소를 물어본다면 각각을 나눠서 배열로 생성한다.
-      - restaurant: 사용자의 요청을 기반으로 반드시 **지역명 + 숙소 키워드가 포함된 간결한 검색 문장**의 배열 형태로 작성한다. 예를 들어 ['서울 음식점'], ['제주 중문 해산물 음식점']처럼 작성한다. travel_destination이나 tourist_attraction 항목이 있으면서 검색 위치가 명확하지 않은 경우에는 '{location} 음식점'처럼 작성한다. 그 외 검색 위치가 명확하지 않은 경우에는 아무것도 출력하지 않고 'x'만 출력한다. 여러 지역에 대한 음식점을 물어본다면 각각을 나눠서 배열로 생성한다.
-      - extra: 사용자의 채팅내역과 질문에서 여행 관련 추천 시 필요한 추가 정보를 반드시 추출하여 포함한다.
-        - 포함해야 할 정보: 
-          - 여행 기간
-          - 예산
-          - 사용자가 원하는 특징 (예: 자연 경관, 액티비티, 휴양, 역사 유적, 관광지 다양성, 혼잡도 등)
-          - 특별한 요청사항 (예: 가족 여행, 커플 여행, 아이 동반 등)
-        - 사용자의 질문 안에 이러한 정보가 직접적으로 명시되거나, 숙소·여행지 추천 요청 내 포함된 수식어에서도 파생될 경우 반드시 해당 키워드를 추출하여 extra에 포함한다.
-        - 관련 정보가 없을 경우 해당 항목은 포함하지 않는다.
-      - tourist_attraction 항목이 없으면서 검색 위치가 명확하지 않은 경우 transportation은 x로 표기한다.
-      - travel_destination 항목이 없으면서 검색 위치가 명확하지 않은 경우 flight는 x로 표기한다.
-      - travel_destination이나 tourist_attraction 항목이 없으면서 검색 위치가 명확하지 않은 경우 restaurant, accommodation은 지역과 관련된 내용만 빼고 사용자의 의도에 맞게 검색할 수 있는 문장을 생성한다.
-
-      아래 형식은 예시이며, 출력 형식은 반드시 순수한 JSON 텍스트만 반환해야 하며, 다른 설명, 문장, 코드 블록 표시, 기호 \` 등을 절대 포함하지 않는다.
-
-      {
-        "travel_destination": "예시 응답",
-        "tourist_attraction": [
-          "제주도", "서울", "부산", ...
-        ],
-        "transportation": [
-          {"departure": "남산타워", "destination": "강남역"},
-          {"departure": "강남역", "destination": "명동"}
-        ],
-        "flight": {"departure": "서울", "destination": "오키나와"},
-        "accommodation": ["제주 중문 바다 전망 숙소"],
-        "restaurant": ["대전 칼국수 맛집"],
-        "extra": "여행 기간 4일, 자연경관"
-      }
-      `;
-
-    const messages = [
-      { role: "system", content: systemPrompt.trim() },
-      { role: "user", content: `채팅 내역:\n${formattedHistory}\n\n현재 질문:\n${user_question}` }
-    ];
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages,
-    });
-
-    const parsing_result = JSON.parse(completion.choices[0].message.content.trim());
-    console.log(parsing_result);
+    let transportation;
+    let flight;
+    const parsing_result = parseUserQuestion(chat_history, user_question);
 
     if("travel_destination" in  parsing_result){
-      const travel_destination_prompt = `
-      너는 사용자의 여행 요청에 따라 여행지를 추천하는 전문가야.
-      사용자의 요청을 분석해서 여행지를 추천하되, **"3곳 추천해줘", "여러 군데", "몇 군데"** 등 복수 요청이 없으면 1곳만 추천해. 복수 요청이 있으면 그것에 맞춰서 여러 곳 추천해줘.
-      추천 결과는 항상 다음과 같은 **배열(JSON Array)** 형식으로 출력해야 해:
-      [
-        {
-          "destination": "여행지 이름",
-          "explanation": "추천 이유를 한 문장 이상으로 설명"
-        },
-        ...
-      ]
-
-      다른 텍스트, 설명, 마크다운 없이 **순수 JSON 배열만 출력**해야 한다. 다른 설명, 문장, 코드 블록 표시, 기호 \` 등을 절대 포함하지 않는다.
-      `
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: travel_destination_prompt },
-          { role: "user", content: `user request : ${parsing_result['travel_destination']}`}
-        ]
-      });
-
-      let recommendedList;
-      try {
-        const raw = completion.choices[0].message.content.trim();
-        recommendedList = JSON.parse(raw);
-        console.log("추천된 여행지 목록:", recommendedList);
-      } catch (e) {
-        console.error("JSON 파싱 실패:", e);
-      }
+        recommendedList = recommendDestinations(parsing_result.travel_destination);
       if("tourist_attraction" in parsing_result){
         const results = await collectTourist(recommendedList);
         tourist = await askTourlist(results, parsing_result.extra);
-        console.log(tourist);
       }
-      
-      if("accommodation" in parsing_result && parsing_result.accommodation != 'x'){
-        const results = await collectPlaces(parsing_result.accommodation, recommendedList);
-        accommodation = await askAccommodation(results, parsing_result.extra);
-      }
-      if("restaurant" in parsing_result && parsing_result.restaurant != 'x'){
-        const results = await collectPlaces(parsing_result.restaurant, recommendedList);
-        restaurant = await askRestaurant(results, parsing_result.extra);
-      }
-
-      if("transportation" in parsing_result){
-        const results = getAllTransitDirections(parsing_result.transportation);
-        console.log(transportation);
-      }
-
     }
     else{
-      if("transportation" in parsing_result){
-        const results = await getAllTransitDirections(parsing_result.transportation);
-        console.log(JSON.stringify(results, null, 2));
+      if("tourist_attraction" in parsing_result){
+        recommendedList = parsing_result.tourist_attraction;
+        const results = await collectTourist(recommendedList);
+        recommendedList = await askTourlist(results, parsing_result.extra);
       }
     }
 
+    if("accommodation" in parsing_result && parsing_result.accommodation != 'x'){
+      const results = await collectPlaces(parsing_result.accommodation, recommendedList);
+      accommodation = await askAccommodation(results, parsing_result.extra);
+    }
 
+    if("restaurant" in parsing_result && parsing_result.restaurant != 'x'){
+      const results = await collectPlaces(parsing_result.restaurant, recommendedList);
+      restaurant = await askRestaurant(results, parsing_result.extra);
+    }
+
+    if("transportation" in parsing_result && parsing_result.transportation != 'x'){
+      transportation = await getAllTransitDirections(parsing_result.transportation);
+    }
+
+    if("flight" in parsing_result && parsing_result.flight.destination != 'x'){
+      function formatDateForSkyscanner(dateStr) {
+        return dateStr.replace(/-/g, '');
+      }
+      const processedFlights = await processIATA(parsing_result.flight, recommendedList);
+  
+      const finalFlights = [];
+
+      for (const flight of processedFlights) {
+        const offers = await searchFlights(
+          flight.departure_iata,
+          flight.destination_iata,
+          flight.departure_date
+        );
+        const skyscannerUrl = `https://www.skyscanner.co.kr/transport/flights/${flight.departure_iata.toLowerCase()}/${flight.destination_iata.toLowerCase()}/${formatDateForSkyscanner(flight.departure_date)}/`;
+
+        finalFlights.push({
+          ...flight,
+          offers: offers,
+          url: skyscannerUrl
+        });
+      }
+
+      flight = finalFlights;
+    }
 
     return success(res, {
       code: 200,

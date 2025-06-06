@@ -28,7 +28,7 @@ const payload = {
     // { username: "user2", message: "가족 여행 좋지! 어떤 지역이 좋을까까?" },
     // { username: "user1", message: "자연 풍경이 좋았으면 해" }
   ],
-  user_question: "남산타워에서 강남역 가는 방법"
+  user_question: "출발지는 김포이고 제주도 가는 항공편 추천해줘"
 };
 
 axios.post('http://localhost:4000/api/v1/ai/ai-test', payload)

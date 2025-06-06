@@ -1,7 +1,7 @@
 
 const chatModel = require('../models/chat.model');
 const chatRoomModel = require('../models/chatRoom.model');
-const { streamChat } = require('../AI_model/chat_ai');
+const { streamChat, travelPlanningPipeline } = require('../AI_model/chat_ai');
 const { makeRoomId } = require('../utils/utils');
 
 
@@ -32,6 +32,8 @@ module.exports = (io, socket) => {
                 }
                 chatLogs += `${result.sender_id}: ${result.message}\n`;
             }
+
+            const data = travelPlanningPipeline(chatLogs, msg);
             let aiMessage = '';
             const aiChat = await chatModel.addchat({
                 roomId: roomId, 

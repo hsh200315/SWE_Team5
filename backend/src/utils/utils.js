@@ -1,5 +1,5 @@
 const { SECRET_KEY, BRAVE_API_KEY, GOOGLE_API_KEY, RAPID_API_KEY, AMADEUS_API_KEY, AMADEUS_SECRET } = require('../config/env');
-const { askOpenAIForIATA } = require("../AI_model/chat_ai");
+
 const axios = require('axios');
 const crypto = require('crypto');
 function makeRoomId(roomId) {
@@ -179,6 +179,28 @@ async function getAllTransitDirections(transportationList) {
     const results = await Promise.all(promises);
 
     return results;
+}
+
+async function askOpenAIForIATA(city) {
+  const systemPrompt = `
+  너는 세계의 도시명과 그 도시에 가까우면서 가장 유명한 공항의 IATA 코드를 매핑해주는 시스템이다.
+  주어진 도시명을 기반으로 공항의 IATA 코드를 알려줘. 절대 거짓으로 답변하지 마
+  답변은 반드시 IATA 코드로 3글자만 출력해야 하고, 추가 설명이나 문장, 기호 등은 절대 포함하지 마.
+  `;
+
+  const userPrompt = `도시명: ${city}`;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]
+  });
+
+  const raw = completion.choices[0].message.content.trim();
+  console.log(raw);
+  return raw;
 }
 
 const iataCache = new Map();

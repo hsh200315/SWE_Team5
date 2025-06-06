@@ -33,7 +33,7 @@ module.exports = (io, socket) => {
                 chatLogs += `${result.sender_id}: ${result.message}\n`;
             }
 
-            const data = travelPlanningPipeline(chatLogs, msg);
+            const data = await travelAnswerPipeline(chatLogs, msg);
             let aiMessage = '';
             const aiChat = await chatModel.addchat({
                 roomId: roomId, 
@@ -44,8 +44,7 @@ module.exports = (io, socket) => {
             });
             try{
                 await streamChat({
-                    msg,
-                    chatLogs,
+                    data,
                     onToken: (token) => {
                         aiMessage+=token;
                         io.to(makeRoomId(roomId)).emit("AI_chat", {

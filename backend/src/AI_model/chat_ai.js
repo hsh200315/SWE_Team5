@@ -1,12 +1,52 @@
 const { ChatOpenAI } = require("langchain/chat_models/openai");
 const { HumanMessage } = require("langchain/schema");
 const { OPENAI_API_KEY } = require('../config/env');
+const { getSearchResult, getPlacesByTextSearch, collectTourist, collectPlaces, getAllTransitDirections, processIATA, searchFlights } = require('../utils/utils');
+
 const OpenAI = require("openai");
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
-async function streamChat({ msg, chatLogs, onToken, onDone }) {
+async function streamChat({ data, onToken, onDone }) {
+
+  const generateAnswerPrompt = `
+    너는 여행 플래너 AI야. 내가 제공하는 각종 데이터를 바탕으로 사용자의 여행 요청에 대해 최종 여행 제안서를 만들어줘.
+
+    다음 규칙을 반드시 따라야 해:
+    - **문서 전체를 코드 블록(\`\`\`markdown\`\`\`)으로 감싸지 않는다.**
+    - 순수하게 마크다운 형식의 텍스트로 작성 (즉, 코드블럭 사용 금지)
+    - 섹션별로 제목을 붙여 깔끔하게 정리(표와 같은 형식을 사용해도 좋음)
+    - 추천 이유도 간단히 포함
+    - 불필요한 사족, 예의상 말투는 사용하지 않는다 (ex: "다음은 추천입니다", "즐거운 여행 되세요" 등)
+    - 질문 의도 파싱 데이터에 포함되어 있는 항목들에 대해서만 반드시 답변. 하지만 해당 항목에 대한 정보가 없으면 지역명 등 더 구체적인 내용을 담아 질문해달라는 식으로 답변 생성.
+    - 질문 의도 파싱 데이터에 포함되지 않은 항목들에 대해서는 답변하지 않는다.
+    - 데이터에 url이 있다면 반드시 답변에 정확하게 포함해서 답변 생성.
+    - 질문 의도 파싱 데이터를 확인했을 때 사용자의 질문이 여행과 관련 없는 내용만 있다면 여행과 관련된 질문만 해달라는 식의 답변 생성.
+    
+
+    다음은 제공되는 데이터이다:
+    사용자 질문 의도 파싱 데이터 : {{parsing_result}}
+
+    파싱 데이터 각 항목에 대한 데이터:
+    travel_destination: {{travel_destination}}
+    tourist_attraction: {{tourist}}
+    accommodation: {{accommodation}}
+    restaurant: {{restaurant}}
+    transportation: {{transportation}}
+    flight: {{flight}}
+
+    이 데이터를 기반으로 최종적인 사용자의 질문에 대한 답변을 깔끔하게 생성해줘.
+    `
+  const systemPrompt = generateAnswerPrompt
+    .replace('{{parsing_result}}', JSON.stringify(data.parsing_result))
+    .replace('{{travel_destination}}', JSON.stringify(data.recommendedList))
+    .replace('{{tourist}}', JSON.stringify(data.tourist))
+    .replace('{{accommodation}}', JSON.stringify(data.accommodation))
+    .replace('{{restaurant}}', JSON.stringify(data.restaurant))
+    .replace('{{transportation}}', JSON.stringify(data.transportation))
+    .replace('{{flight}}', JSON.stringify(data.flight));
+
   const model = new ChatOpenAI({
     modelName: "gpt-4o",
     temperature: 0.5,
@@ -23,18 +63,16 @@ async function streamChat({ msg, chatLogs, onToken, onDone }) {
       },
     ],
   });
-  //console.log(msg);
-  //console.log(chatLogs);
-  await model.call([new HumanMessage(msg)]);
+  await model.call([new HumanMessage(systemPrompt)]);
 }
 
-async function travelPlanningPipeline(chat_history, user_question) {
-  let recommendedList;
-  let tourist;
-  let accommodation;
-  let restaurant;
-  let transportation;
-  let flight;
+async function travelAnswerPipeline(chat_history, user_question) {
+  let recommendedList=null;
+  let tourist=null;
+  let accommodation=null;
+  let restaurant=null;
+  let transportation=null;
+  let flight=null;
 
   const parsing_result = await parseUserQuestion(chat_history, user_question);
 
@@ -50,7 +88,8 @@ async function travelPlanningPipeline(chat_history, user_question) {
     if ("tourist_attraction" in parsing_result) {
       recommendedList = parsing_result.tourist_attraction;
       const results = await collectTourist(recommendedList);
-      recommendedList = await askTourlist(results, parsing_result.extra);
+      tourist = await askTourlist(results, parsing_result.extra);
+      recommendedList = tourist
     }
   }
 
@@ -336,26 +375,4 @@ async function askRestaurant(allResults, extraInfo) {
   }
 }
 
-async function askOpenAIForIATA(city) {
-  const systemPrompt = `
-  너는 세계의 도시명과 그 도시에 가까우면서 가장 유명한 공항의 IATA 코드를 매핑해주는 시스템이다.
-  주어진 도시명을 기반으로 공항의 IATA 코드를 알려줘. 절대 거짓으로 답변하지 마
-  답변은 반드시 IATA 코드로 3글자만 출력해야 하고, 추가 설명이나 문장, 기호 등은 절대 포함하지 마.
-  `;
-
-  const userPrompt = `도시명: ${city}`;
-
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ]
-  });
-
-  const raw = completion.choices[0].message.content.trim();
-  console.log(raw);
-  return raw;
-}
-
-module.exports = { streamChat, askTourlist, askAccommodation, askRestaurant, askOpenAIForIATA, parseUserQuestion, recommendDestinations, travelPlanningPipeline };
+module.exports = { streamChat, askTourlist, askAccommodation, askRestaurant, parseUserQuestion, recommendDestinations, travelAnswerPipeline };

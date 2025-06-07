@@ -117,20 +117,21 @@ export default function ChatRoom() {
     socketRef.current.on("AI_chat", (data) => {
       setChatList((prev) => {
         const lastIndex = prev.length - 1;
-        if (lastIndex >= 0 && prev[lastIndex].sender_id === data.sender_id) {
+        if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
           const updated = [...prev];
           if (aiChatGenerating) {
             setAiChatGenerating(false)
           }
           const lastMessage = updated[lastIndex];
           updated[lastIndex] = {
-            sender_id: lastMessage.sender_id,
+            chat_id: lastMessage.chat_id,
+            sender_id: data.sender_id,
             message: lastMessage.message + data.message,
           };
           return updated;
         }
         // Otherwise, add a new AI message entry
-        return [...prev, { sender_id: data.sender_id, message: data.message }];
+        return [...prev, { chat_id: data.chat_id, message: data.message }];
       });
       if (chatRef.current) {
         chatRef.current.scrollTo({
@@ -149,6 +150,35 @@ export default function ChatRoom() {
       });
       setCheckedIds([]);
     });
+
+    socketRef.current.on("travel_plan", (data) => {
+      setChatList((prev) => {
+        const lastIndex = prev.length - 1;
+        if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
+          const updated = [...prev];
+          if (aiChatGenerating) {
+            setAiChatGenerating(false)
+          }
+          const lastMessage = updated[lastIndex];
+          updated[lastIndex] = {
+            chat_id: lastMessage.chat_id,
+            sender_id: data.sender_id,
+            message: lastMessage.message + data.message,
+          };
+          return updated;
+        }
+        // Otherwise, add a new AI message entry
+        return [...prev, { chat_id: data.chat_id, message: data.message }];
+      });
+      if (chatRef.current) {
+        chatRef.current.scrollTo({
+          top: chatRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    });
+
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -221,9 +251,8 @@ export default function ChatRoom() {
     if (buttonOnOff[0]) {
       setAiChatGenerating(true);
     }
-
-    socketRef.current.emit("chatMsg", chatData);
-    inputRef.current.value = "";
+      socketRef.current.emit("chatMsg", chatData);
+      inputRef.current.value = "";
   };
 
   // 7) 선택한 채팅방의 유저 정보를 가져오는 함수
@@ -313,6 +342,17 @@ export default function ChatRoom() {
         return copy;
       });
     }
+  }
+  
+  const travel_plan = () => {
+    if (buttonOnOff[2]) {
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[2] = false;
+        return copy;
+      });
+    }
+    socketRef.current.emit("travel_plan", { chatHistory: checkedIds });
   }
 
   return (
@@ -430,6 +470,7 @@ export default function ChatRoom() {
                   checkedIds={checkedIds}
                   setCheckedIds={setCheckedIds}
                   RecommendPrompt={RecommendPrompt}
+                  travel_plan={travel_plan}
                 />
               </div>
               <button
@@ -540,7 +581,8 @@ function ButtonList({
   SetModalOnOff,
   checkedIds,
   setCheckedIds,
-  RecommendPrompt
+  RecommendPrompt,
+  travel_plan,
 }) {
   const buttonTitle = [
     "AI에게 물어보기",
@@ -560,7 +602,11 @@ function ButtonList({
               onClick={() => {
                 if (idx === 1) {
                   RecommendPrompt();
-                } else {
+                } 
+                else if(idx==2){
+                  travel_plan();
+                }
+                else {
                   SetButtonOnOff((prev) => {
                     const copy = [...prev];
                     copy[idx] = !copy[idx];

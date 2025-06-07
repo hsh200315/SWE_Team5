@@ -515,19 +515,30 @@ export default function ChatRoom() {
 
 /*======== 채팅 버블 (Other) ========*/
 function ChatBubbleOther({ name, children }) {
-  // Sena일 땐 Markdown → HTML 변환, 아니면 일반 children
   const content =
     name === "Sena" ? (
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          // 링크는 새 탭으로 열리도록
+          ul: ({ node, ...props }) => (
+            <ul className="list-disc list-inside pl-6 mb-2" {...props} />
+          ),
+          li: ({ node, ...props }) => (
+            <li className="mb-1" {...props} />
+          ),
           a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
+            <a
+              href={href}
+              className="text-blue-600 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {children}
             </a>
           ),
-          // 필요하면 ul, ol, li, strong 등 다른 태그도 커스터마이즈 가능
+          h3: ({ node, ...props }) => (
+            <h3 className="text-xl font-semibold mb-4" {...props} />
+          ),
         }}
       >
         {children}

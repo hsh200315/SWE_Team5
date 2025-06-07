@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 import { LoadScriptNext, GoogleMap, MarkerF} from "@react-google-maps/api";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import ReactModal from "react-modal";
 import logo_white from "../../public/logo_white.png";
 import {
@@ -513,20 +515,45 @@ export default function ChatRoom() {
 
 /*======== 채팅 버블 (Other) ========*/
 function ChatBubbleOther({ name, children }) {
+  // Sena일 땐 Markdown → HTML 변환, 아니면 일반 children
+  const content =
+    name === "Sena" ? (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // 링크는 새 탭으로 열리도록
+          a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noopener noreferrer">
+              {children}
+            </a>
+          ),
+          // 필요하면 ul, ol, li, strong 등 다른 태그도 커스터마이즈 가능
+        }}
+      >
+        {children}
+      </ReactMarkdown>
+    ) : (
+      children
+    );
+
   return (
     <div className="flex flex-col items-start mb-2">
       <div className="flex items-center">
-        {name == "Sena" && (
-          <Image src={logo_white} alt="logo" className="h-[2em] w-auto ml-1" />
+        {name === "Sena" && (
+          <Image
+            src={logo_white}
+            alt="logo"
+            className="h-[2em] w-auto ml-1"
+          />
         )}
         <div className="pl-2 font-semibold">{name}</div>
       </div>
       <div
         className={`${
-          name == "Sena" ? "bg-[#EAEAEA]" : "bg-[#86D9FE]"
+          name === "Sena" ? "bg-[#EAEAEA]" : "bg-[#86D9FE]"
         } px-4 py-2 rounded-lg max-w-[70%] break-words ml-2`}
       >
-        {children}
+        {content}
       </div>
     </div>
   );

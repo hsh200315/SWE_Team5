@@ -22,7 +22,7 @@ module.exports = (io, socket) => {
             io.to(makeRoomId(roomId)).emit('chatMsg', chat);
         } catch {
             // 만약 전송 시 error가 발생했으면 chat도 삭제해야 한다.
-            if(chat && !chat.chat_id) {
+            if(chat && chat.chat_id) {
                 await chatModel.deleteById({chatId: chat.chat_id});
             }
             socket.emit("server-error", {message: "msg is not sent because of server error."});

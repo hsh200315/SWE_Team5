@@ -8,7 +8,6 @@ https://www.figma.com/design/ryAW4lxOg6w8ExbZHMgPBB/SWE-Group-5?node-id=0-1&p=f&
 ## Prerequirements
 node.js: v23.10.0
 
-# Get Started
 ## 1. Installation
 
 ```bash
@@ -33,7 +32,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API= #Google Map API KEY
 npm run dev
 ```
 
-# file structure
+## file structure
 
 app/chat/page.js: 채팅 화면
 app/login/page.js: 로그인 화면

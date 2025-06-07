@@ -78,6 +78,20 @@ describe('User table test', () => {
         expect(chats[1].message).toBe(chat1.message);
         
         expect(roomInfo.updated_at).toBe(second.timestamp);
+    }),
+    test('delete chat', async() => {
+        const chat = {
+            roomId: aliceRoom.room_id,
+            sender: alice,
+            message: 'hello bob!',
+            isPlan: false,
+            mapImage: null
+        }
+       
+        const c = await chatModel.addchat(chat);
+        const result = await chatModel.deleteById({chatId: c.chat_id});
+        const chats = await chatModel.chatlist({roomId: aliceRoom.room_id});
+        expect(chats.length).toBe(0);
     })
     }
 )

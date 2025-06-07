@@ -44,6 +44,17 @@ module.exports = {
             return new Error(err);
         }
     },
+
+    deleteById: async (data) => {
+        const {chatId} = data;
+        try {
+            const result = await run("DELETE FROM Chat WHERE chat_id = ?",[chatId]);
+            return result;
+        } catch(err) {
+            return new Error(err);
+        }
+    },
+
     updateMessage: async ({ chat_id, message }) => {
         try {
             await run("UPDATE Chat SET message = ? WHERE chat_id = ?", [message, chat_id]);

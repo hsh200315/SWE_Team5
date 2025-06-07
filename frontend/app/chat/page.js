@@ -16,6 +16,7 @@ import {
 } from "react-icons/go";
 import { AiOutlineFilter } from "react-icons/ai";
 import { LuLoader } from "react-icons/lu";
+import { CiEdit } from "react-icons/ci";
 
 import Sidebar from "../components/Sidebar";
 
@@ -25,6 +26,7 @@ export default function ChatRoom() {
   const socketRef = useRef(null);
   const inputRef = useRef(null);
   const chatRef = useRef(null);
+  const promptRef = useRef(null);
 
   const [username, setUsername] = useState("");
   const [chatList, setChatList] = useState([]);
@@ -33,8 +35,9 @@ export default function ChatRoom() {
   const [selectedRoom, setSelectedRoom] = useState(0);
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
   const [aiChatGenerating, setAiChatGenerating] = useState(false);
+  const [aiPromptGenerating, setAiPromptGenerating] = useState(false);
   const [openMenuRoom, setOpenMenuRoom] = useState(false);
-  const [promptRecommend, setPromptRecommend] = useState('')
+  const [promptRecommendText, setPromptRecommendText] = useState('')
 
   const [buttonOnOff, setButtonOnOff] = useState([
     false,
@@ -262,19 +265,37 @@ export default function ChatRoom() {
   };
 
   const RecommendPrompt = async () => {
+    if (buttonOnOff[1]) {
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[1] = false;
+        return copy;
+      });
+      return;
+    }
     try {
+      if(promptRef.current){
+        promptRef.current.innerText = "";
+      }
+      setPromptRecommendText("");
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[1] = !copy[1];
+        return copy;
+      });
       const text = inputRef.current.value.trim();
       if (!text) return;
 
+      setAiPromptGenerating(true);
       const res = await fetch("http://localhost:4000/api/v1/ai/prompt-generation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chatHistory:checkedIds, msg:text }),
       });
       const data = await res.json();
-      console.log(data)
       if (res.ok) {
-        setPromptRecommend(data.data);
+        setPromptRecommendText(data.data);
+        setAiPromptGenerating(false);
       } else {
         console.error("프롬프트 추천 실패:", data);
       }
@@ -282,6 +303,17 @@ export default function ChatRoom() {
       console.error("프롬프트 추천 중 에러:", err);
     }
   };
+
+  const OnClickPrompt = () => {
+    if (promptRef.current) {
+      inputRef.current.value = promptRef.current.innerText;
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[1] = false;
+        return copy;
+      });
+    }
+  }
 
   return (
     <div className="flex h-screen">
@@ -350,51 +382,69 @@ export default function ChatRoom() {
         )}
 
         {/* 하단 입력창 + 전송 버튼 */}
-        <div className="absolute bottom-0 left-[29vw] right-[15vw] bg-white p-2 mb-[2vh] border rounded-[22px]">
-          <textarea
-            ref={inputRef}
-            rows={1}
-            style={{ maxHeight: "4.5rem" }}
-            placeholder="메시지를 입력하세요"
-            onInput={(e) => {
-              e.target.style.height = "auto";
-              e.target.style.height = `${Math.min(
-                e.target.scrollHeight,
-                72
-              )}px`;
-            }}
-            disabled={selectedRoom === 0 || aiChatGenerating}
-            className={`w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none ${
-              selectedRoom === 0 ? "bg-gray-100 cursor-not-allowed" : ""
-            }`}
-          />
-          <div className="flex justify-between items-center">
-            <div
-              className={
-                selectedRoom === 0 ? "opacity-50 pointer-events-none" : ""
-              }
-            >
-              <ButtonList
-                SetButtonOnOff={setButtonOnOff}
-                buttonOnOff={buttonOnOff}
-                SetModalOnOff={setModalOnOff}
-                checkedIds={checkedIds}
-                setCheckedIds={setCheckedIds}
-                RecommendPrompt={RecommendPrompt}
-              />
+        <div className="absolute bottom-0 left-[29vw] right-[15vw] bg-white p-0">
+          {buttonOnOff[1] && (
+            <div className="flex flex-col justify-start items-center bg-[#EFEFEF] px-3 pt-2 rounded-lg relative z-0 h-[14vh] mb-[2vh]">
+              <div className="text-gray-500 text-sm mb-1 w-full">
+                아래와 같이 프롬프트를 다시 작성해 드릴까요?
+              </div>
+              <div
+                className={`w-full bg-[#D0D0D0] h-[60%] p-1 rounded-lg overflow-y-auto ${
+                  aiPromptGenerating ? "flex justify-center items-center font-bold" : ""
+                }`} 
+                ref={promptRef}
+                onClick={OnClickPrompt}
+              >
+                {aiPromptGenerating ? <div className="flex flex-row items-center"><CiEdit className="text-xl"/>프롬프트 작성 중...</div> : promptRecommendText}
+              </div>
             </div>
-            <button
-              onClick={sendChat}
-              disabled={selectedRoom === 0}
-              style={{ backgroundColor: "#11B8FF" }}
-              className={`p-2 rounded-2xl shadow text-white hover:bg-blue-600 ${
-                selectedRoom === 0
-                  ? "opacity-50 cursor-not-allowed hover:bg-blue-600"
-                  : ""
+          )}
+          <div className="p-2 mt-[-4vh] mb-[2vh] border rounded-[22px] bg-white relative z-10">
+            <textarea
+              ref={inputRef}
+              rows={1}
+              style={{ maxHeight: "4.5rem" }}
+              placeholder="메시지를 입력하세요"
+              onInput={(e) => {
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(
+                  e.target.scrollHeight,
+                  72
+                )}px`;
+              }}
+              disabled={selectedRoom === 0 || aiChatGenerating}
+              className={`w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none ${
+                selectedRoom === 0 ? "bg-gray-100 cursor-not-allowed" : ""
               }`}
-            >
-              <GoPaperAirplane className="text-base" />
-            </button>
+            />
+            <div className="flex justify-between items-center">
+              <div
+                className={
+                  selectedRoom === 0 ? "opacity-50 pointer-events-none" : ""
+                }
+              >
+                <ButtonList
+                  SetButtonOnOff={setButtonOnOff}
+                  buttonOnOff={buttonOnOff}
+                  SetModalOnOff={setModalOnOff}
+                  checkedIds={checkedIds}
+                  setCheckedIds={setCheckedIds}
+                  RecommendPrompt={RecommendPrompt}
+                />
+              </div>
+              <button
+                onClick={sendChat}
+                disabled={selectedRoom === 0}
+                style={{ backgroundColor: "#11B8FF" }}
+                className={`p-2 rounded-2xl shadow text-white hover:bg-blue-600 ${
+                  selectedRoom === 0
+                    ? "opacity-50 cursor-not-allowed hover:bg-blue-600"
+                    : ""
+                }`}
+              >
+                <GoPaperAirplane className="text-base" />
+              </button>
+            </div>
           </div>
         </div>
       </main>

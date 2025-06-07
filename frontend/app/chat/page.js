@@ -183,6 +183,34 @@ export default function ChatRoom() {
       }
     });
 
+    socketRef.current.on("coordinate", (data) => {
+      setChatList((prev) => {
+        const lastIndex = prev.length - 1;
+        if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
+          const updated = [...prev];
+          if (aiChatGenerating) {
+            setAiChatGenerating(false)
+          }
+          const lastMessage = updated[lastIndex];
+          updated[lastIndex] = {
+            chat_id: lastMessage.chat_id,
+            sender_id: data.sender_id,
+            message: lastMessage.message + data.message,
+            is_plan: 1,
+          };
+          return updated;
+        }
+        // Otherwise, add a new AI message entry
+        return [...prev, { chat_id: data.chat_id, message: data.message , is_plan: 1, sender_id: data.sender_id}];
+      });
+      if (chatRef.current) {
+        chatRef.current.scrollTo({
+          top: chatRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    });
+
 
     return () => {
       if (socketRef.current) {

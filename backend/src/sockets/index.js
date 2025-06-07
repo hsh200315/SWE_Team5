@@ -14,15 +14,15 @@ module.exports = (io, socket) => {
         // 현재 소켓이 속한 채팅방 Id와 사용자 이름
         const roomId = socket.roomId;
         const username = socket.username;
-        let chat = undefined;
+        let chat;
         try {
             // DB에 채팅 기록 저장
             chat = await chatModel.addchat({roomId: roomId, sender: username, message: msg, isPlan: false, mapImage: null});
             // 해당 방에 있는 모든 클라이언트에게 새 메시지 전송
             io.to(makeRoomId(roomId)).emit('chatMsg', chat);
         } catch {
-            // 만약 socketio error가 발생했으면 chat도 삭제해야 한다.
-            if(!chat.chat_id) {
+            // 만약 전송 시 error가 발생했으면 chat도 삭제해야 한다.
+            if(chat && !chat.chat_id) {
                 await chatModel.deleteById({chatId: chat.chat_id});
             }
             socket.emit("server-error", {message: "msg is not sent because of server error."});

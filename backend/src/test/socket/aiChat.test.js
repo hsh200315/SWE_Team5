@@ -51,13 +51,13 @@ describe('socket chat test', () => {
     const bobTokens = [];
     let aliceDone = false;
     let bobDone = false;
-    const input = "안녕 GPT야 너에 대해서 소개해줘";
+    const input = "여행지 추천해줘";
 
     (async () => {
       const chat1 = await chatModel.addchat({
         roomId: room.room_id,
         sender: sender,
-        message: "이전 채팅 메시지 1",
+        message: "여행 어디로 갈까?",
         isPlan: false,
         mapImage: null
       });
@@ -65,7 +65,7 @@ describe('socket chat test', () => {
       const chat2 = await chatModel.addchat({
         roomId: room.room_id,
         sender: receiver,
-        message: "이전 채팅 메시지 2",
+        message: "글쎄, 경치가 좋은 곳으로 가고 싶은데",
         isPlan: false,
         mapImage: null
       });
@@ -88,7 +88,7 @@ describe('socket chat test', () => {
         if (aliceDone && bobDone) {
           const aText = aliceTokens.join('');
           const bText = bobTokens.join('');
-          //console.log("최종 Alice 응답:", aText);
+          console.log("최종 Alice 응답:", aText);
           //console.log("최종 Bob 응답:", bText);
           expect(aText).toBe(bText);
           expect(aText.length).toBeGreaterThan(0);
@@ -117,5 +117,5 @@ describe('socket chat test', () => {
         });
       });
     })();
-  }, 10000);
+  }, 100000);
 });

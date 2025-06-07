@@ -25,4 +25,7 @@ module.exports = {
     // api key
     BRAVE_API_KEY: process.env.BRAVE_API,
     GOOGLE_API_KEY: process.env.GOOGLE_API,
+    RAPID_API_KEY: process.env.RAPID_API,
+    AMADEUS_API_KEY: process.env.AMADEUS_API,
+    AMADEUS_SECRET: process.env.AMADEUS_SECRET, 
 };

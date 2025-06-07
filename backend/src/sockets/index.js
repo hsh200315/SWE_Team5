@@ -1,7 +1,7 @@
 
 const chatModel = require('../models/chat.model');
 const chatRoomModel = require('../models/chatRoom.model');
-const { streamChat } = require('../AI_model/chat_ai');
+const { streamChat, planChat, travelAnswerPipeline } = require('../AI_model/chat_ai');
 const { makeRoomId } = require('../utils/utils');
 
 
@@ -32,6 +32,8 @@ module.exports = (io, socket) => {
                 }
                 chatLogs += `${result.sender_id}: ${result.message}\n`;
             }
+
+            const data = await travelAnswerPipeline(chatLogs, msg);
             let aiMessage = '';
             const aiChat = await chatModel.addchat({
                 roomId: roomId, 
@@ -42,8 +44,7 @@ module.exports = (io, socket) => {
             });
             try{
                 await streamChat({
-                    msg,
-                    chatLogs,
+                    data,
                     onToken: (token) => {
                         aiMessage+=token;
                         io.to(makeRoomId(roomId)).emit("AI_chat", {
@@ -149,7 +150,7 @@ module.exports = (io, socket) => {
         const temp_coord_str = JSON.stringify(temp_coordinate);
         const msg = "안녕 GPT야 너에 대해서 소개해줘"
         try{
-            await streamChat({
+            await planChat({
                 msg,
                 chatLogs,
                 onToken: (token) => {
@@ -160,6 +161,11 @@ module.exports = (io, socket) => {
                     });
                 },
                 onDone: async () => {
+                    await chatModel.updateMessage({
+                        chat_id: aiChat.chat_id,
+                        message:aiMessage
+                    });
+
                     await chatModel.updateMessage({
                         chat_id: coordinateChat.chat_id,
                         message: temp_coord_str

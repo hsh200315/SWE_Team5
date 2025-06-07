@@ -1,22 +1,49 @@
 2025 소프트웨어공학개론 5조 팀 프로젝트입니다.
 
-UI Design
+# UI Design
 https://www.figma.com/design/ryAW4lxOg6w8ExbZHMgPBB/SWE-Group-5?node-id=0-1&p=f&t=ns6OOZkb05B5ZWo5-0
 
-Frontend
-1. frontend 경로 접속
-2. npm install package.json
-3. npm run dev
+# Frontend
+
+## Prerequirements
+node.js: v23.10.0
+
+# Get Started
+## 1. Installation
+
+```bash
+git clone https://github.com/hsh200315/SWE_Team5.git
+cd frontend
+
+npm install
+
+```
+
+## 2. setup .env.development and production
+Google Map API 실행을 위한 env 파일 설정입니다.
+
+.env
+
+```bash
+NEXT_PUBLIC_GOOGLE_MAPS_API= #Google Map API KEY
+```
+
+## 3. start
+```bash
+npm run dev
+```
+
+# file structure
+
+app/chat/page.js: 채팅 화면
+app/login/page.js: 로그인 화면
+app/components/Sidebar.js: 채팅 화면 사이드 바
 
 
 # Backend
 
-# Prerequirements
-node.js: v23.10.0
-
-
 # Get Started
-## 0. Installation
+## 1. Installation
 
 ```bash
 git clone https://github.com/hsh200315/SWE_Team5.git

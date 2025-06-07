@@ -32,7 +32,7 @@ export default function ChatRoom() {
   const [roomList, setRoomList] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(0);
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
-  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiChatGenerating, setAiChatGenerating] = useState(false);
   const [openMenuRoom, setOpenMenuRoom] = useState(false);
   const [promptRecommend, setPromptRecommend] = useState('')
 
@@ -53,7 +53,7 @@ export default function ChatRoom() {
           behavior: "smooth",
         });
       }
-  }, [aiGenerating]);
+  }, [aiChatGenerating]);
 
   // 1) 컴포넌트 마운트 시 sessionStorage에서 username 읽어오기
   useEffect(() => {
@@ -116,7 +116,9 @@ export default function ChatRoom() {
         const lastIndex = prev.length - 1;
         if (lastIndex >= 0 && prev[lastIndex].sender_id === data.sender_id) {
           const updated = [...prev];
-          setAiGenerating(false)
+          if (aiChatGenerating) {
+            setAiChatGenerating(false)
+          }
           const lastMessage = updated[lastIndex];
           updated[lastIndex] = {
             sender_id: lastMessage.sender_id,
@@ -136,7 +138,13 @@ export default function ChatRoom() {
     });
 
     socketRef.current.on("AI_chat_done", () => {
-      setAiGenerating(false);
+      setAiChatGenerating(false);
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[0] = false;
+        return copy;
+      });
+      setCheckedIds([]);
     });
     return () => {
       if (socketRef.current) {
@@ -208,7 +216,7 @@ export default function ChatRoom() {
       chatHistory: checkedIds,
     };
     if (buttonOnOff[0]) {
-      setAiGenerating(true);
+      setAiChatGenerating(true);
     }
 
     socketRef.current.emit("chatMsg", chatData);
@@ -266,7 +274,7 @@ export default function ChatRoom() {
       const data = await res.json();
       console.log(data)
       if (res.ok) {
-        setPromptRecommend(data.prompt);
+        setPromptRecommend(data.data);
       } else {
         console.error("프롬프트 추천 실패:", data);
       }
@@ -296,7 +304,7 @@ export default function ChatRoom() {
           SetSelectedRoom={setSelectedRoom}
           selectedRoomUsers={selectedRoomUsers}
           username={username}
-          aiGenerating={aiGenerating}
+          aiChatGenerating={aiChatGenerating}
           openMenuRoom={openMenuRoom}
           setOpenMenuRoom={setOpenMenuRoom}
           handleInvite={handleInvite}
@@ -324,7 +332,7 @@ export default function ChatRoom() {
                 </ChatBubbleOther>
               )
             )}
-            {aiGenerating && (
+            {aiChatGenerating && (
               <div className="flex flex-col w-full h-[30%]">
                 <div className="flex flex-row items-center w-[100%]">
                   <Image src={logo_white} alt="logo" className="w-[5%] mr-1 ml-1" />
@@ -355,7 +363,7 @@ export default function ChatRoom() {
                 72
               )}px`;
             }}
-            disabled={selectedRoom === 0 || aiGenerating}
+            disabled={selectedRoom === 0 || aiChatGenerating}
             className={`w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none ${
               selectedRoom === 0 ? "bg-gray-100 cursor-not-allowed" : ""
             }`}
@@ -533,9 +541,7 @@ function ButtonList({
           key={3}
           onClick={() => SetModalOnOff((prev) => !prev)}
           style={{ borderColor: "#D4D4D4" }}
-          className={`px-3 py-1 rounded-full border text-sm ${
-            buttonOnOff[3] ? "bg-sky-400" : "bg-white"
-          }`}
+          className="px-3 py-1 rounded-full border text-sm bg-white"
         >
           <div
             className="flex items-center space-x-1"

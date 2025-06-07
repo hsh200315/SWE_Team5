@@ -544,29 +544,48 @@ function ChatBubbleMine({ children }) {
 }
 
 function ChatBubbleMap({ coords }) {
-  const coordsArr = JSON.parse(coords);  
+  const coordsArr = JSON.parse(coords);
 
-  const total = coordsArr.reduce((acc, [lat, lng]) => {
-    return {
-      lat: acc.lat + Number(lat),
-      lng: acc.lng + Number(lng),
-    };
-  }, { lat: 0, lng: 0 });
+  if (!coordsArr || coordsArr.length === 0) return null;
 
-  const count = coordsArr.length;
-  const avgLat = total.lat / count;
-  const avgLng = total.lng / count;
+  // 좌표 배열에서 위도와 경도 분리
+  const lats = coordsArr.map(pos => Number(pos[0]));
+  const lngs = coordsArr.map(pos => Number(pos[1]));
 
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+
+  // 지도 중심 계산
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLng = (minLng + maxLng) / 2;
+
+  // 위도, 경도의 차이를 이용해 범위 계산 (maxDelta가 작으면 좌표들이 가깝다는 뜻)
+  const deltaLat = maxLat - minLat;
+  const deltaLng = maxLng - minLng;
+  const maxDelta = Math.max(deltaLat, deltaLng);
+
+  // maxDelta에 따라 zoom 계산 (좌표들이 가까울수록 더 높은 zoom)
+  let zoom;
+  if (maxDelta === 0) {
+    zoom = 14; // 모두 같은 경우 최대 zoom 설정
+  } else {
+    // 대략적인 공식: zoom = log2(360 / maxDelta)
+    zoom = Math.log2(360 / maxDelta);
+    // zoom 기본 범위 조정 (필요에 따라 clamp 값 조절)
+    zoom = Math.min(12, Math.max(7, zoom));
+  }
 
   return(
     <LoadScriptNext googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API}>
       <GoogleMap
         mapContainerStyle={{ width: "70%", height: "100%" }}
-        center={{lat: avgLat, lng: avgLng}}
-        zoom={7.2}
+        center={{ lat: centerLat, lng: centerLng }}
+        zoom={zoom}
       >
         {coordsArr.map((pos, i) => (
-          <MarkerF key={i} position={{ lat: pos[0], lng: pos[1] }} />
+          <MarkerF key={i} position={{ lat: Number(pos[0]), lng: Number(pos[1]) }} />
         ))}
       </GoogleMap>
   </LoadScriptNext>

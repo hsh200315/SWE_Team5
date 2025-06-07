@@ -1,4 +1,5 @@
 const { SECRET_KEY, BRAVE_API_KEY, GOOGLE_API_KEY, RAPID_API_KEY, AMADEUS_API_KEY, AMADEUS_SECRET } = require('../config/env');
+const { savePlaceToCache, getPlaceFromCache } = require('../models/placeCoord.model');
 
 const axios = require('axios');
 const crypto = require('crypto');
@@ -67,7 +68,9 @@ async function collectTourist(destinations) {
     const query = `${destination} 관광지`;
 
     const places = await getPlacesByTextSearch(query);
-
+    for (const place of places) {
+      await savePlaceToCache(place);
+    }
     const simplifiedPlaces = places.map(place => ({
       name: place.name,
       rating: place.rating,
@@ -85,13 +88,42 @@ async function collectTourist(destinations) {
 }
 
 async function collectPlaces(questions, destinations) {
-  const allResults = await Promise.all(destinations.map(async (item) => {
-    const destination = typeof item === "string" ? item : item.destination;
-    const placeResults = await Promise.all(questions.map(async (template) => {
-      const query = template.replace("{location}", destination);
+  let allResults = [];
 
+  if (Array.isArray(destinations) && destinations.length > 0) {
+    allResults = await Promise.all(destinations.map(async (item) => {
+      const destination = typeof item === "string" ? item : item.destination;
+      const placeResults = await Promise.all(questions.map(async (template) => {
+        const query = template.replace("{location}", destination);
+        const places = await getPlacesByTextSearch(query);
+        for (const place of places) {
+          await savePlaceToCache(place);
+        }
+        const simplifiedPlaces = places.map(place => ({
+          name: place.name,
+          rating: place.rating,
+          address: place.formatted_address,
+          url: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
+        }));
+
+        return {
+          query: query,
+          places: simplifiedPlaces
+        };
+      }));
+
+      return {
+        destination: destination,
+        places: placeResults
+      };
+    }));
+
+  } else {
+    allResults = await Promise.all(questions.map(async (query) => {
       const places = await getPlacesByTextSearch(query);
-
+      for (const place of places) {
+        await savePlaceToCache(place);
+      }
       const simplifiedPlaces = places.map(place => ({
         name: place.name,
         rating: place.rating,
@@ -104,12 +136,8 @@ async function collectPlaces(questions, destinations) {
         places: simplifiedPlaces
       };
     }));
+  }
 
-    return {
-      destination: destination,
-      places: placeResults
-    };
-  }));
   return allResults;
 }
 
@@ -169,7 +197,6 @@ async function getTransitDirections(origin, destination) {
 }
 
 async function getAllTransitDirections(transportationList) {
-    console.log(transportationList);
     const promises = transportationList.map(item => {
         const origin = item.departure;
         const destination = item.destination;
@@ -199,7 +226,6 @@ async function askOpenAIForIATA(city) {
   });
 
   const raw = completion.choices[0].message.content.trim();
-  console.log(raw);
   return raw;
 }
 
@@ -381,6 +407,40 @@ async function searchFlights(originIATA, destinationIATA, departureDate) {
   return offers;
 }
 
+async function getLatLngForPlace(placeName) {
+  const cached = await getPlaceFromCache(placeName);
+  if (cached && cached.lat && cached.lng) {
+    return [cached.lat, cached.lng];
+  }
+
+  // 2. 구글 API 호출
+  const places = await getPlacesByTextSearch(placeName);
+  if (!places || places.length === 0) {
+    console.warn(`Google Places에서 '${placeName}' 결과 없음`);
+    return null;
+  }
+
+  const place = places[0];
+
+  // DB에 저장
+  await savePlaceToCache(place);
+
+  return [place.geometry.location.lat, place.geometry.location.lng];
+}
+
+async function buildCoordinateArray(extractedPlaces) {
+  const coordinates = [];
+
+  for (const placeName of extractedPlaces) {
+    const coord = await getLatLngForPlace(placeName);
+    if (coord) {
+      coordinates.push(coord);
+    }
+  }
+
+  return coordinates;
+}
+
 module.exports = {
     makeRoomId,
     encryptMessage,
@@ -392,4 +452,5 @@ module.exports = {
     getAllTransitDirections,
     processIATA,
     searchFlights,
+    buildCoordinateArray,
 };

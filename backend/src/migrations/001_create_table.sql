@@ -33,4 +33,10 @@ CREATE TABLE IF NOT EXISTS ChatRoomUser (
     FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS PlaceCoord (
+    name TEXT PRIMARY KEY,
+    lat REAL,
+    lng REAL
+);
+
 COMMIT;

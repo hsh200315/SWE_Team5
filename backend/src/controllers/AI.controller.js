@@ -81,8 +81,7 @@ module.exports = {
     let restaurant;
     let transportation;
     let flight;
-    const parsing_result = parseUserQuestion(chat_history, user_question);
-
+    const parsing_result = await parseUserQuestion(chat_history, user_question);
     if("travel_destination" in  parsing_result){
         recommendedList = recommendDestinations(parsing_result.travel_destination);
       if("tourist_attraction" in parsing_result){

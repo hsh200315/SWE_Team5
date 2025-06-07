@@ -1,7 +1,8 @@
 
 const chatModel = require('../models/chat.model');
 const chatRoomModel = require('../models/chatRoom.model');
-const { streamChat, planChat, travelAnswerPipeline } = require('../AI_model/chat_ai');
+const { streamChat, planChat, travelAnswerPipeline, extractPlacesFromSchedule } = require('../AI_model/chat_ai');
+const { buildCoordinateArray } = require('../utils/utils');
 const { makeRoomId } = require('../utils/utils');
 
 
@@ -142,16 +143,8 @@ module.exports = (io, socket) => {
             isPlan: true, 
             mapImage: null
         });
-        const temp_coordinate = [
-            [37.579617, 126.977041], 
-            [37.551169, 126.988227],  
-            [37.563757, 126.982677]   
-        ];
-        const temp_coord_str = JSON.stringify(temp_coordinate);
-        const msg = "안녕 GPT야 너에 대해서 소개해줘"
         try{
             await planChat({
-                msg,
                 chatLogs,
                 onToken: (token) => {
                     aiMessage+=token;
@@ -166,14 +159,18 @@ module.exports = (io, socket) => {
                         message:aiMessage
                     });
 
+                    const extractedPlaces = await extractPlacesFromSchedule(aiMessage);
+
+                    const finalCoordinates = await buildCoordinateArray(extractedPlaces);
+
                     await chatModel.updateMessage({
                         chat_id: coordinateChat.chat_id,
-                        message: temp_coord_str
+                        message: finalCoordinates
                     });
 
                     io.to(makeRoomId(roomId)).emit("coordinate",{
                         ...coordinateChat,
-                        message:temp_coord_str
+                        message:JSON.stringify(finalCoordinates)
                     });
                 }
             });

@@ -8,10 +8,34 @@ const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
-async function planChat({ msg, chatLogs, onToken, onDone }) {
+async function planChat({ chatLogs, onToken, onDone }) {
+
+  const generateAnswerPrompt = `
+    너는 여행 일정 플래너 AI야. 사용자가 제공한 대화 내용을 참고하여 상세한 여행 일정을 작성해줘.
+
+    다음의 규칙을 반드시 따른다:
+    - 하루 단위로 상세하게 나눠서 작성
+    - 각 일자별로 아침, 점심, 저녁, 저녁 이후 활동까지 구성
+    - 이동 동선을 고려하여 효율적인 순서로 배치
+    - 사용자의 요청/선호사항을 최대한 반영
+    - 적절한 추천 이유도 짧게 포함
+    - 식사 장소도 적절히 배치
+    - **반드시 마크다운 형식으로 작성. 하지만 \`\`\`markdown\`\`\` 코드블럭은 사용하지 않는다.**
+    - 순수하게 마크다운 형식의 텍스트로 작성
+    - 전체적인 여행 제목 및 요약부터 시작
+    - 사용자의 질문이 부족할 경우 직접 묻는 대신, 적절한 기본 일정을 생성하고 해당 부분에 대해 언급한다.
+    - url이 있다면 반드시 답변에 정확하게 포함시켜서 생성한다.
+    - 장소명은 채팅 로그에 있는 데이터를 그대로 사용해서 작성한다.
+
+    다음은 사용자가 제공한 대화 내용이다:
+    {{chatLogs}}
+
+    이 정보를 기반으로 여행 일정을 생성해줘.
+  `;
+  const prompt = generateAnswerPrompt.replace('{{chatLogs}}', chatLogs);
   const model = new ChatOpenAI({
     modelName: "gpt-4o",
-    temperature: 0.5,
+    temperature: 0.3,
     streaming: true,
     openAIApiKey: OPENAI_API_KEY,
     callbacks: [
@@ -25,21 +49,48 @@ async function planChat({ msg, chatLogs, onToken, onDone }) {
       },
     ],
   });
-  //console.log(msg);
-  //console.log(chatLogs);
-  await model.call([new HumanMessage(msg)]);
+  await model.call([new HumanMessage(prompt)]);
 }
 
+
+async function extractPlacesFromSchedule(scheduleText) {
+  const extractPrompt = `
+  너는 마크다운으로 작성된 여행 일정에서 방문하는 장소명만 추출하는 역할을 한다.
+  다음 규칙을 반드시 따른다:
+
+  - 장소명만 추출 (시간, 설명, 식사, 활동 설명 제외)
+  - 장소명이 명확히 나와있으면 해당 전체 장소명을 정확하게 추출해야 해.
+  - 중복은 제거한다.
+  - 반드시 **JSON array 형식의 순수 텍스트**로 출력한다.
+  - JSON array 이외에는 아무 문자, 문장, 코드블럭, 마크다운, 기호 등을 출력하지 않는다.
+  - \`\`\`json\`\`\`과 같은 내용은 출력하지 않는다.
+  - 장소명이 명확히 나와있지 않더라도 판단하여 주요 장소명을 최대한 추출한다.
+
+  다음은 여행 일정이다:
+
+  {{schedule}}`
+  const prompt = extractPrompt.replace('{{schedule}}', scheduleText);
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "system", content: prompt }],
+    temperature: 0
+  });
+
+  const result = JSON.parse(completion.choices[0].message.content.trim());
+  return result;
+}
 
 async function streamChat({ data, onToken, onDone }) {
 
   const generateAnswerPrompt = `
-    너는 여행 플래너 AI야. 내가 제공하는 각종 데이터를 바탕으로 사용자의 여행 요청에 대해 최종 여행 제안서를 만들어줘.
+    너는 여행 플래너 AI야. 내가 제공하는 각종 데이터를 바탕으로 사용자의 여행 질문에 대해 여행 제안서를 만들어줘.
 
     다음 규칙을 반드시 따라야 해:
     - **문서 전체를 코드 블록(\`\`\`markdown\`\`\`)으로 감싸지 않는다.**
     - 순수하게 마크다운 형식의 텍스트로 작성 (즉, 코드블럭 사용 금지)
     - 섹션별로 제목을 붙여 깔끔하게 정리(표와 같은 형식을 사용해도 좋음)
+    - 장소명은 반드시 주어진 정보대로 작성해.
     - 추천 이유도 간단히 포함
     - 불필요한 사족, 예의상 말투는 사용하지 않는다 (ex: "다음은 추천입니다", "즐거운 여행 되세요" 등)
     - 질문 의도 파싱 데이터에 포함되어 있는 항목들에 대해서만 반드시 답변. 하지만 해당 항목에 대한 정보가 없으면 지역명 등 더 구체적인 내용을 담아 질문해달라는 식으로 답변 생성.
@@ -72,7 +123,7 @@ async function streamChat({ data, onToken, onDone }) {
 
   const model = new ChatOpenAI({
     modelName: "gpt-4o",
-    temperature: 0.5,
+    temperature: 0.3,
     streaming: true,
     openAIApiKey: OPENAI_API_KEY,
     callbacks: [
@@ -101,7 +152,6 @@ async function travelAnswerPipeline(chat_history, user_question) {
 
   if ("travel_destination" in parsing_result) {
     recommendedList = await recommendDestinations(parsing_result.travel_destination);
-    console.log("추천된 여행지 목록:", recommendedList);
 
     if ("tourist_attraction" in parsing_result) {
       const results = await collectTourist(recommendedList);
@@ -266,6 +316,7 @@ async function recommendDestinations(travelDestinationText) {
 async function askTourlist(allResults, extraInfo) {
   const systemPrompt = `
     너는 여행 전문가야. 아래 여러 지역의 관광지 후보 리스트를 보고 각 지역마다 사용자의 의도에 맞게 관광지를 추천해줘.
+    이름은 반드시 주어진 정보대로 작성해야 해.
     반드시 다음과 같은 JSON 형태로 출력해:
     [
       {
@@ -317,6 +368,7 @@ async function askTourlist(allResults, extraInfo) {
 async function askAccommodation(allResults, extraInfo) {
   const systemPrompt = `
     너는 여행 전문가야. 아래 여러 지역의 숙소 후보 리스트를 보고 각 지역마다 사용자의 의도에 맞게 숙소를 추천해줘.
+    이름은 반드시 주어진 정보대로 작성해.
     반드시 다음과 같은 JSON 형태로 출력해:
     {
       "지역명1": [
@@ -337,7 +389,6 @@ async function askAccommodation(allResults, extraInfo) {
     userInput += `후보 리스트: ${JSON.stringify(result.places)}\n\n`;
   }
   userInput += `\n사용자의 요청에 대한 추가 정보 : ${extraInfo}`;
-  console.log(userInput);
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [
@@ -359,6 +410,7 @@ async function askAccommodation(allResults, extraInfo) {
 async function askRestaurant(allResults, extraInfo) {
   const systemPrompt = `
     너는 여행 전문가야. 아래 여러 지역의 음식점 리스트를 보고 각 지역마다 사용자의 의도에 맞게 음식점을 추천해줘.
+    이름은 반드시 주어진 정보대로 작성해.
     반드시 다음과 같은 JSON 형태로 출력해:
     {
       "지역명1": [
@@ -379,7 +431,6 @@ async function askRestaurant(allResults, extraInfo) {
     userInput += `후보 리스트: ${JSON.stringify(result.places)}\n\n`;
   }
   userInput += `\n사용자의 요청에 대한 추가 정보 : ${extraInfo}`;
-  console.log(userInput);
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [
@@ -398,4 +449,4 @@ async function askRestaurant(allResults, extraInfo) {
   }
 }
 
-module.exports = { streamChat, askTourlist, askAccommodation, askRestaurant, parseUserQuestion, recommendDestinations, travelAnswerPipeline, planChat };
+module.exports = { streamChat, askTourlist, askAccommodation, askRestaurant, parseUserQuestion, recommendDestinations, travelAnswerPipeline, planChat, extractPlacesFromSchedule };

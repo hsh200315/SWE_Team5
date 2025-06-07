@@ -8,6 +8,29 @@ const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
+async function planChat({ msg, chatLogs, onToken, onDone }) {
+  const model = new ChatOpenAI({
+    modelName: "gpt-4o",
+    temperature: 0.5,
+    streaming: true,
+    openAIApiKey: OPENAI_API_KEY,
+    callbacks: [
+      {
+        handleLLMNewToken(token) {
+          onToken(token);
+        },
+        handleLLMEnd() {
+          if (onDone) onDone();
+        }
+      },
+    ],
+  });
+  //console.log(msg);
+  //console.log(chatLogs);
+  await model.call([new HumanMessage(msg)]);
+}
+
+
 async function streamChat({ data, onToken, onDone }) {
 
   const generateAnswerPrompt = `
@@ -375,4 +398,4 @@ async function askRestaurant(allResults, extraInfo) {
   }
 }
 
-module.exports = { streamChat, askTourlist, askAccommodation, askRestaurant, parseUserQuestion, recommendDestinations, travelAnswerPipeline };
+module.exports = { streamChat, askTourlist, askAccommodation, askRestaurant, parseUserQuestion, recommendDestinations, travelAnswerPipeline, planChat };

@@ -220,7 +220,7 @@ export default function ChatRoom() {
   }, [selectedRoom]);
 
   useEffect(() => {
-    setModalChatList(chatList);
+    setModalChatList(chatList.filter(item => item.is_plan !== 1));
     if (modalOnOff) {
       setCheckedIds([]);
     }

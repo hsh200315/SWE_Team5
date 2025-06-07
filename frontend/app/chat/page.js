@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
+import { LoadScriptNext, GoogleMap, MarkerF} from "@react-google-maps/api";
 import Image from "next/image";
 import ReactModal from "react-modal";
 import logo_white from "../../public/logo_white.png";
@@ -48,6 +49,8 @@ export default function ChatRoom() {
   ]);
   const [modalOnOff, setModalOnOff] = useState(false);
   const [checkedIds, setCheckedIds] = useState([]);
+
+  const initialZoom = 7.2;
 
   useEffect(() => {
     if (chatRef.current) {
@@ -217,6 +220,7 @@ export default function ChatRoom() {
         { method: "GET" }
       );
       const data = await res.json();
+      console.log("채팅 내역:", data);
       if (res.ok) {
         setChatList([...data.data].reverse());
 
@@ -395,15 +399,29 @@ export default function ChatRoom() {
             ref={chatRef}
             className="space-y-2 w-full h-full overflow-y-auto pb-[10vh]"
           >
-            {chatList.map((chat, idx) =>
-              chat.sender_id === username ? (
-                <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
-              ) : (
-                <ChatBubbleOther key={idx} name={chat.sender_id}>
-                  {chat.message}
-                </ChatBubbleOther>
-              )
-            )}
+            {chatList.map((chat, idx) => {
+              if (chat.is_plan === 1) {
+                return (
+                  <div key={idx} className="w-full h-64 mb-4">
+                    <ChatBubbleMap coords={chat.message} />
+                  </div>
+                );
+              }
+
+              if (chat.sender_id === username) {
+                return (
+                  <ChatBubbleMine key={idx}>
+                    {chat.message}
+                  </ChatBubbleMine>
+                );
+              } else {
+                return (
+                  <ChatBubbleOther key={idx} name={chat.sender_id}>
+                    {chat.message}
+                  </ChatBubbleOther>
+                );
+              }
+            })}
             {aiChatGenerating && (
               <div className="flex flex-col w-full h-[30%]">
                 <div className="flex flex-row items-center w-[100%]">
@@ -523,6 +541,36 @@ function ChatBubbleMine({ children }) {
       </div>
     </div>
   );
+}
+
+function ChatBubbleMap({ coords }) {
+  const coordsArr = JSON.parse(coords);  
+
+  const total = coordsArr.reduce((acc, [lat, lng]) => {
+    return {
+      lat: acc.lat + Number(lat),
+      lng: acc.lng + Number(lng),
+    };
+  }, { lat: 0, lng: 0 });
+
+  const count = coordsArr.length;
+  const avgLat = total.lat / count;
+  const avgLng = total.lng / count;
+
+
+  return(
+    <LoadScriptNext googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API}>
+      <GoogleMap
+        mapContainerStyle={{ width: "70%", height: "100%" }}
+        center={{lat: avgLat, lng: avgLng}}
+        zoom={7.2}
+      >
+        {coordsArr.map((pos, i) => (
+          <MarkerF key={i} position={{ lat: pos[0], lng: pos[1] }} />
+        ))}
+      </GoogleMap>
+  </LoadScriptNext>
+  )
 }
 
 /*======== 모달채팅 버블 (Other) ========*/

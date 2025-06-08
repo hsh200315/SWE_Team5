@@ -31,7 +31,10 @@ module.exports = (io, socket) => {
         }
         if(toAI) {
             if (aiProcessingRooms.has(roomId)) {
-                socket.emit("AI-chat-error", { message: "AI chat is already in progress for this room." });
+                socket.emit("AI-chat-error", { 
+                    message: "AI chat is already in progress for this room.",
+                    username: username
+                });
                 return;
             }
             aiProcessingRooms.add(roomId);
@@ -131,8 +134,13 @@ module.exports = (io, socket) => {
 
     socket.on("travel_plan", async (data) => {
         const roomId = socket.roomId;
+        const username = socket.username;
         if (aiProcessingRooms.has(roomId)) {
-            socket.emit("Travel-plan-error", { message: "This room is already being processed." });
+            socket.emit("Travel-plan-error", { 
+                message: "This room is already being processed.",
+                username: username
+            
+            });
             return;
         }
         aiProcessingRooms.add(roomId);

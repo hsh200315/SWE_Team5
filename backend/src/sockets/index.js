@@ -166,10 +166,10 @@ module.exports = (io, socket) => {
                     const extractedPlaces = await extractPlacesFromSchedule(aiMessage);
 
                     const finalCoordinates = await buildCoordinateArray(extractedPlaces);
-
+                    console.log(finalCoordinates);
                     await chatModel.updateMessage({
                         chat_id: coordinateChat.chat_id,
-                        message: finalCoordinates
+                        message: JSON.stringify(finalCoordinates)
                     });
 
                     io.to(makeRoomId(roomId)).emit("coordinate",{

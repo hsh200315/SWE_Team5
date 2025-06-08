@@ -140,13 +140,7 @@ module.exports = (io, socket) => {
             isPlan: false, 
             mapImage: null
         });
-        const coordinateChat = await chatModel.addchat({
-            roomId: roomId, 
-            sender: "Sena", 
-            message: "",
-            isPlan: true, 
-            mapImage: null
-        });
+        
         try{
             await planChat({
                 chatLogs,
@@ -167,14 +161,15 @@ module.exports = (io, socket) => {
 
                     const finalCoordinates = await buildCoordinateArray(extractedPlaces);
                     console.log(finalCoordinates);
-                    await chatModel.updateMessage({
-                        chat_id: coordinateChat.chat_id,
-                        message: JSON.stringify(finalCoordinates)
+                    const coordinateChat = await chatModel.addchat({
+                        roomId: roomId, 
+                        sender: "Sena", 
+                        message: JSON.stringify(finalCoordinates),
+                        isPlan: true, 
+                        mapImage: null
                     });
-
                     io.to(makeRoomId(roomId)).emit("coordinate",{
-                        ...coordinateChat,
-                        message:JSON.stringify(finalCoordinates)
+                        ...coordinateChat
                     });
                 }
             });

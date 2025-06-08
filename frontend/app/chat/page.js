@@ -30,6 +30,7 @@ export default function ChatRoom() {
   const inputRef = useRef(null);
   const chatRef = useRef(null);
   const promptRef = useRef(null);
+  const planRef = useRef(null)
 
   const [username, setUsername] = useState("");
   const [chatList, setChatList] = useState([]);
@@ -119,13 +120,11 @@ useEffect(() => {
     });
 
     socketRef.current.on("AI_chat", (data) => {
+      setAiChatGenerating(false);
       setChatList((prev) => {
         const lastIndex = prev.length - 1;
         if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
           const updated = [...prev];
-          if (aiChatGenerating) {
-            setAiChatGenerating(false)
-          }
           const lastMessage = updated[lastIndex];
           updated[lastIndex] = {
             chat_id: lastMessage.chat_id,
@@ -146,7 +145,6 @@ useEffect(() => {
     });
 
     socketRef.current.on("AI_chat_done", () => {
-      setAiChatGenerating(false);
       setButtonOnOff((prev) => {
         const copy = [...prev];
         copy[0] = false;
@@ -175,11 +173,6 @@ useEffect(() => {
         // Otherwise, add a new AI message entry
         return [...prev, { chat_id: data.chat_id, message: data.message }];
       });
-      setButtonOnOff((prev) => {
-        const copy = [...prev];
-        copy[2] = false;
-        return copy;
-      });
       if (chatRef.current) {
         chatRef.current.scrollTo({
           top: chatRef.current.scrollHeight,
@@ -189,6 +182,13 @@ useEffect(() => {
     });
 
     socketRef.current.on("coordinate", (data) => {
+      planRef.current = false
+      setAiPlanGenerating(false)
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[2] = false;
+        return copy;
+      });
       setChatList((prev) => {
         const lastIndex = prev.length - 1;
         if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
@@ -278,6 +278,10 @@ useEffect(() => {
   // 6) 채팅 메시지를 전송하는 함수
   const sendChat = () => {
     if (!socketRef.current) return;
+
+    if(planRef.current) return;
+
+    if(aiChatGenerating) return;
 
     const text = inputRef.current.value.trim();
     if (!text) return;
@@ -384,10 +388,15 @@ useEffect(() => {
   }
   
   const travel_plan = () => {
+    if(planRef.current){
+      alert("기존 AI 기능이 완료되면 실행해주세요!")
+      return;
+    }
     if(aiChatGenerating || aiPromptGenerating || aiPlanGenerating){
       alert("기존 AI 기능이 완료되면 실행해주세요!")
       return
     }
+    planRef.current=true;
     setButtonOnOff((prev) => {
       const copy = [...prev];
       copy[2] = true;

@@ -39,6 +39,7 @@ export default function ChatRoom() {
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
   const [aiChatGenerating, setAiChatGenerating] = useState(false);
   const [aiPromptGenerating, setAiPromptGenerating] = useState(false);
+  const [aiPlanGenerating, setAiPlanGenerating] = useState(false)
   const [openMenuRoom, setOpenMenuRoom] = useState(false);
   const [promptRecommendText, setPromptRecommendText] = useState('')
 
@@ -52,14 +53,14 @@ export default function ChatRoom() {
   const [modalOnOff, setModalOnOff] = useState(false);
   const [checkedIds, setCheckedIds] = useState([]);
 
-  useEffect(() => {
+useEffect(() => {
     if (chatRef.current) {
         chatRef.current.scrollTo({
           top: chatRef.current.scrollHeight,
           behavior: "smooth",
         });
-      }
-  }, [aiChatGenerating]);
+    }
+}, [chatList]);
 
   // 1) 컴포넌트 마운트 시 sessionStorage에서 username 읽어오기
   useEffect(() => {
@@ -155,6 +156,7 @@ export default function ChatRoom() {
     });
 
     socketRef.current.on("travel_plan", (data) => {
+      setAiPlanGenerating(false);
       setChatList((prev) => {
         const lastIndex = prev.length - 1;
         if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
@@ -172,6 +174,11 @@ export default function ChatRoom() {
         }
         // Otherwise, add a new AI message entry
         return [...prev, { chat_id: data.chat_id, message: data.message }];
+      });
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[2] = false;
+        return copy;
       });
       if (chatRef.current) {
         chatRef.current.scrollTo({
@@ -377,18 +384,16 @@ export default function ChatRoom() {
   }
   
   const travel_plan = () => {
-    if(aiChatGenerating || aiPromptGenerating){
+    if(aiChatGenerating || aiPromptGenerating || aiPlanGenerating){
       alert("기존 AI 기능이 완료되면 실행해주세요!")
       return
     }
-
-    if (buttonOnOff[2]) {
-      setButtonOnOff((prev) => {
-        const copy = [...prev];
-        copy[2] = false;
-        return copy;
-      });
-    }
+    setButtonOnOff((prev) => {
+      const copy = [...prev];
+      copy[2] = true;
+      return copy;
+    });    
+    setAiPlanGenerating(true)
     socketRef.current.emit("travel_plan", { chatHistory: checkedIds });
   }
 
@@ -455,7 +460,7 @@ export default function ChatRoom() {
                 );
               }
             })}
-            {aiChatGenerating && (
+            {(aiChatGenerating || aiPlanGenerating) && (
               <div className="flex flex-col w-full h-[30%]">
                 <div className="flex flex-row items-center w-[100%]">
                   <Image src={logo_white} alt="logo" className="w-[5%] mr-1 ml-1" />

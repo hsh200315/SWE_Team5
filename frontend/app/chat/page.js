@@ -52,8 +52,6 @@ export default function ChatRoom() {
   const [modalOnOff, setModalOnOff] = useState(false);
   const [checkedIds, setCheckedIds] = useState([]);
 
-  const initialZoom = 7.2;
-
   useEffect(() => {
     if (chatRef.current) {
         chatRef.current.scrollTo({
@@ -496,7 +494,7 @@ export default function ChatRoom() {
             <textarea
               ref={inputRef}
               rows={1}
-              style={{ maxHeight: "4.5rem" }}
+              style={{ maxHeight: "4.5rem", color:"black"}}
               placeholder="메시지를 입력하세요"
               onInput={(e) => {
                 e.target.style.height = "auto";
@@ -857,6 +855,7 @@ function CheckModal({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="채팅 검색..."
+          style={{color:"black"}}
           className="flex-grow px-3 py-2 border-none rounded-md text-sm mr-2"
         />
         <button

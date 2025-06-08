@@ -6,6 +6,8 @@ const { buildCoordinateArray } = require('../utils/utils');
 const { makeRoomId } = require('../utils/utils');
 
 
+const aiProcessingRooms = new Set();
+
 module.exports = (io, socket) => {
     // 다른 사용자에게 메시지 보내는 이벤트
     socket.on('chatMsg',async (data) => {
@@ -28,6 +30,11 @@ module.exports = (io, socket) => {
             socket.emit("server-error", {message: "msg is not sent because of server error."});
         }
         if(toAI) {
+            if (aiProcessingRooms.has(roomId)) {
+                socket.emit("AI-chat-error", { message: "AI chat is already in progress for this room." });
+                return;
+            }
+            aiProcessingRooms.add(roomId);
             let chatLogs = '';
             for (const chatId of chatHistory) {
                 const result = await chatModel.findById({ chatId });
@@ -64,10 +71,12 @@ module.exports = (io, socket) => {
                         });
 
                         io.to(makeRoomId(roomId)).emit("AI_chat_done");
+                        aiProcessingRooms.delete(roomId);
                     }
                 });
             } catch (err) {
                 socket.emit("AI-chat-error", {message: "msg is not sent because of AI chat error."});
+                aiProcessingRooms.delete(roomId);
             }
         }
     });
@@ -122,12 +131,17 @@ module.exports = (io, socket) => {
 
     socket.on("travel_plan", async (data) => {
         const roomId = socket.roomId;
+        if (aiProcessingRooms.has(roomId)) {
+            socket.emit("Travel-plan-error", { message: "This room is already being processed." });
+            return;
+        }
+        aiProcessingRooms.add(roomId);
         const {chatHistory} = data;
         let chatLogs = '';;
         for (const chatId of chatHistory) {
             const result = await chatModel.findById({ chatId });
             if (result instanceof Error) {
-                socket.emit("AI-chat-error", {message: "msg is not sent because of AI chat error."});
+                socket.emit("Travel-plan-error", {message: "msg is not sent because of AI chat error."});
                 continue;
             }
             chatLogs += `${result.sender_id}: ${result.message}\n`;
@@ -171,10 +185,12 @@ module.exports = (io, socket) => {
                     io.to(makeRoomId(roomId)).emit("coordinate",{
                         ...coordinateChat
                     });
+                    aiProcessingRooms.delete(roomId);
                 }
             });
         } catch(err){
             socket.emit("Travel-plan-error", {message: "msg is not sent because of travel plan error."});
+            aiProcessingRooms.delete(roomId);
         }
         
     });

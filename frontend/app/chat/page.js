@@ -379,6 +379,11 @@ export default function ChatRoom() {
   }
   
   const travel_plan = () => {
+    if(aiChatGenerating || aiPromptGenerating){
+      alert("기존 AI 기능이 완료되면 실행해주세요!")
+      return
+    }
+
     if (buttonOnOff[2]) {
       setButtonOnOff((prev) => {
         const copy = [...prev];

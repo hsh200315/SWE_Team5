@@ -227,6 +227,10 @@ function CreateRoomModal({
   }
 
   const handleApply = () => {
+    if(newRoomName == ""){
+      alert("방 이름은 필수입니다.")
+      return
+    }
     SetModalOnOff(false);
     CreateNewRoom();
   };

@@ -765,7 +765,7 @@ function ButtonList({
           );
         })}
       </div>
-      <div className="flex space-x-2">
+      <div className="flex ml-2">
         <button
           key={3}
           onClick={() => SetModalOnOff((prev) => !prev)}

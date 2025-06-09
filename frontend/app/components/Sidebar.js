@@ -3,9 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ReactModal from "react-modal";
 import { AiOutlineUserAdd, AiOutlineUserDelete } from "react-icons/ai";
-import { LuUser } from "react-icons/lu";
+import { LuUser, LuLogOut } from "react-icons/lu";
 
 import logo_blue from "../../public/logo_blue.png";
+import user_pfp from "../../public/user_pfp.png";
 
 export default function Sidebar({
   roomList,
@@ -71,7 +72,8 @@ export default function Sidebar({
     router.push("/login");
   };
   return (
-    <div style={{ width: "100%", backgroundColor: "#84CDEE", height: "100vh" }}>
+    <div className="flex flex-col justify-between h-screen w-full"// username과 logout을 하단에 고정하기 위해 추가
+    style={{ width: "100%", backgroundColor: "#84CDEE", height: "100vh" }}>
       <CreateRoomModal
         modalOnOff={modalOnOff}
         SetModalOnOff={SetModalOnOff}
@@ -91,11 +93,11 @@ export default function Sidebar({
         className="flex flex-row items-center text-white"
       >
         <Image src={logo_blue} alt="logo" className="w-[24%] h-auto p-0 m-0" />
-        <div className="w-[60%] text-3xl">SENA.AI</div>
+        <div className="w-[60%] text-3xl font-thin">SENA.AI</div>
       </div>
 
       <div className="w-full h-[65%] px-[4%] overflow-y-auto">
-        <div className="text-white bold mb-[3%]">CHATROOMS</div>
+        <div className="text-white font-bold mb-[3%]">CHATROOMS</div>
         {roomList.map((idx) => {
           const isSelected = idx.room_id === selectedRoom;
           return (
@@ -173,22 +175,26 @@ export default function Sidebar({
         <button
           onClick={() => SetModalOnOff(true)}
           style={{ borderRadius: "6px" }}
-          className="flex flex-row bg-white py-[5%] px-[7%] w-[100%]"
+          className="flex flex-row text-white bg-[#84CDEE] border border-dashed border-white py-[5%] px-[7%] w-[100%] hover:bg-white hover:text-[#84CDEE] hover:border-white transition-colors"
         >
-          <div style={{ color: "#84CDEE" }} className="mr-[5%]">
+          <div className="mr-[5%]">
             +
           </div>
-          <div style={{ color: "#84CDEE" }}>New Chat</div>
+          <div>New Chat</div>
         </button>
       </div>
 
-      <div className="flex flex-row text-white items-center justify-center mb-[6%] w-[100%] text-2xl">
-        {username}
-      </div>
-      <div className="flex flex-row items-center justify-center w-[100%]">
-        <button onClick={()=> Logout()} className="flex flex-row items-center justify-center w-[60%] bg-white text-[#84CDEE] py-[3%] px-[5%] rounded-[6px] hover:bg-gray-200 transition-colors">
-          Log out
-        </button>
+      <div className="mt-auto px-[4%] mb-[8%]">
+        <div className="flex flex-row text-white items-center mb-[6%] w-[100%] text-xl gap-x-2">
+          <Image src={user_pfp} alt="pfp" className="w-[20%] h-auto p-0 m-0" />
+          {username}
+        </div>
+        <div className="flex flex-row items-center justify-center w-[100%]">
+          <button onClick={()=> Logout()} className="flex flex-row items-center w-[100%] bg-[#84CDEE] text-white py-[3%] px-[5%] rounded-[6px] hover:bg-gray-200 transition-colors">
+            <LuLogOut className="mr-3"/>
+            Log out
+          </button>
+        </div>
       </div>
     </div>
   );

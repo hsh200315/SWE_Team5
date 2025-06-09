@@ -607,7 +607,7 @@ function ChatBubbleOther({ name, children }) {
       <div
         className={`${
           name === "Sena" ? "bg-[#EAEAEA]" : "bg-[#86D9FE]"
-        } px-4 py-2 rounded-lg max-w-[70%] break-words ml-2`}
+        } px-4 py-2 rounded-lg max-w-[70%] break-words ml-2 text-black`}
       >
         {content}
       </div>
@@ -687,7 +687,7 @@ function ModalChatBubbleOther({
     <div className="flex flex-col items-start mb-2 w-[100%]">
       <div className="text-sm font-semibold ml-2">{name}</div>
       <div className="flex flex-row w-[100%]">
-        <div className="bg-sky-300 px-4 py-2 rounded-lg max-w-[70%] break-words ml-2">
+        <div className="bg-sky-300 px-4 py-2 rounded-lg max-w-[70%] break-words ml-2 text-black">
           {children}
         </div>
         <button onClick={() => toggleCheck(chat.chat_id)} className="ml-2 mt-3">

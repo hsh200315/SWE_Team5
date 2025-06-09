@@ -148,13 +148,22 @@ describe("travel_plan AI 스트리밍 테스트", () => {
         handleDone();
       });
 
+      bobSocket.on("Travel-plan-error", (data) => {
+        console.log(data);
+        expect(data.message).toBe("This room is already being processed.");
+        errorReceived = true;
+      });
+
       // 소켓 연결 후 요청 emit
       aliceSocket.on('connect', () => {
         aliceSocket.emit("travel_plan", {
           chatHistory: chatHistory
         });
+        setTimeout(() => {
+          bobSocket.emit("travel_plan", { chatHistory });
+        }, 10);
       });
 
     })();
-  }, 20000);
+  }, 40000);
 });

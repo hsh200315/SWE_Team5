@@ -98,7 +98,7 @@ export default function Home() {
             <span
               style={{
                 fontFamily: "Roboto, sans-serif",
-                fontWeight: 250,
+                fontWeight: 300,
                 fontSize: "1.7vw",
                 color: "#84CDEE",
               }}

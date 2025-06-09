@@ -153,6 +153,13 @@ useEffect(() => {
       setCheckedIds([]);
     });
 
+    socketRef.current.on("AI-chat-error", (data) => {
+      console.log(data)
+      setAiChatGenerating(false)
+      setAiPlanGenerating(false)
+      alert("다른 유저의 AI채팅이 생성 완료될 때까지 기다려주세요!")
+    });
+
     socketRef.current.on("travel_plan", (data) => {
       setAiPlanGenerating(false);
       setChatList((prev) => {

@@ -154,16 +154,28 @@ useEffect(() => {
     });
 
     socketRef.current.on("AI-chat-error", (data) => {
-      console.log(data)
       setAiChatGenerating(false)
       setAiPlanGenerating(false)
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[0] = false;
+        return copy;
+      });
+      planRef.current = false
+      setCheckedIds([]);
       alert("다른 유저의 기능이 생성 완료될 때까지 기다려주세요!")
     });
 
     socketRef.current.on("Travel-plan-error", (data) => {
-      console.log(data)
       setAiChatGenerating(false)
       setAiPlanGenerating(false)
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[2] = false;
+        return copy;
+      });
+      planRef.current = false
+      setCheckedIds([]);
       alert("다른 유저의 AI 기능이 완료될 때까지 기다려주세요!")
     });
 

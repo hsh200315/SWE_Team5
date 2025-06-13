@@ -26,13 +26,12 @@ import Sidebar from "../components/Sidebar";
 export default function ChatRoom() {
   const router = useRouter();
 
-  //소켓 연결 담당, 방 변경할 때 socketRef.current도 변경
-  const socketRef = useRef(null);
-  const inputRef = useRef(null);
-  const chatRef = useRef(null);
-  const promptRef = useRef(null);
-  const planRef = useRef(null);
-  const loadingRef = useRef(null);
+  const socketRef = useRef(null); // 소켓 연결 담당, 방 변경할 때 socketRef.current도 변경
+  const inputRef = useRef(null); // 하단 입력창
+  const chatRef = useRef(null); // 채팅창 하단으로 스크롤 내리기 위해 존재
+  const promptRef = useRef(null); // 프롬프트 추천 내용
+  const aiRef = useRef(null); // ai 생성 중 표시
+  const loadingRef = useRef(null); // 로딩 창 표시 여부
 
   const [username, setUsername] = useState("");
   const [chatList, setChatList] = useState([]);
@@ -131,7 +130,7 @@ export default function ChatRoom() {
 
     // 소켓 연결 후 들어오는 AI 답변 수신
     socketRef.current.on("AI_chat", (data) => {
-      planRef.current = true
+      aiRef.current = true
       loadingRef.current = false
 
       setChatList((prev) => {
@@ -158,7 +157,7 @@ export default function ChatRoom() {
 
     // AI 답변 생성이 완료됐을 때 신호
     socketRef.current.on("AI_chat_done", () => {
-      planRef.current = false
+      aiRef.current = false
       loadingRef.current = false
       setButtonOnOff((prev) => {
         const copy = [...prev];
@@ -170,7 +169,7 @@ export default function ChatRoom() {
 
     // AI 답변 생성 중 에러 발생
     socketRef.current.on("AI-chat-error", (data) => {
-      planRef.current = false;
+      aiRef.current = false;
       loadingRef.current = false;
 
       setButtonOnOff((prev) => {
@@ -184,7 +183,7 @@ export default function ChatRoom() {
 
     // 소켓 연결 후 들어오는 일정표 생성 답변 수신(글)
     socketRef.current.on("travel_plan", (data) => {
-      planRef.current = true
+      aiRef.current = true
       loadingRef.current = false
       setChatList((prev) => {
         const lastIndex = prev.length - 1;
@@ -210,7 +209,7 @@ export default function ChatRoom() {
 
     // 소캣 연결 후 들어오는 일정표 생성 답변 수신(좌표)
     socketRef.current.on("coordinate", (data) => {
-      planRef.current = false;
+      aiRef.current = false;
       loadingRef.current = false
       setButtonOnOff((prev) => {
         const copy = [...prev];
@@ -251,7 +250,7 @@ export default function ChatRoom() {
 
     // 일정표 생성 중 에러 발생
     socketRef.current.on("Travel-plan-error", (data) => {
-      planRef.current = false;
+      aiRef.current = false;
       loadingRef.current = false
 
       setButtonOnOff((prev) => {
@@ -325,7 +324,7 @@ export default function ChatRoom() {
     if (!socketRef.current) return;
 
     // AI 답변 완성 전까진 채팅 제한
-    if (planRef.current) {
+    if (aiRef.current) {
       alert("기존 AI 기능이 완료되면 실행해주세요!")
       return;
     }
@@ -339,7 +338,7 @@ export default function ChatRoom() {
       chatHistory: checkedIds,
     };
     if (buttonOnOff[0]) {
-      planRef.current = true
+      aiRef.current = true
       loadingRef.current = true
     }
     // 소켓으로 채팅 전송 및 입력 창 초기화
@@ -446,11 +445,11 @@ export default function ChatRoom() {
 
   // 10) 일정표 생성 함수
   const travel_plan = () => {
-    if (planRef.current) {
+    if (aiRef.current) {
       alert("기존 AI 기능이 완료되면 실행해주세요!");
       return;
     }
-    planRef.current = true;
+    aiRef.current = true;
     loadingRef.current = true;
     setButtonOnOff((prev) => {
       const copy = [...prev];
@@ -481,7 +480,7 @@ export default function ChatRoom() {
           SetSelectedRoom={setSelectedRoom}
           selectedRoomUsers={selectedRoomUsers}
           username={username}
-          generating={planRef.current}
+          generating={aiRef.current}
           openMenuRoom={openMenuRoom}
           setOpenMenuRoom={setOpenMenuRoom}
           handleInvite={handleInvite}
@@ -582,7 +581,7 @@ export default function ChatRoom() {
                   72
                 )}px`;
               }}
-              disabled={selectedRoom === 0 || planRef.current}
+              disabled={selectedRoom === 0 || aiRef.current}
               className={`w-full resize-none overflow-y-auto p-2 rounded shadow-none focus:outline-none border-none ${
                 selectedRoom === 0 ? "bg-gray-100 cursor-not-allowed" : ""
               }`}

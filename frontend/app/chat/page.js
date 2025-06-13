@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
-import { LoadScriptNext, GoogleMap, MarkerF} from "@react-google-maps/api";
+import { LoadScriptNext, GoogleMap, MarkerF } from "@react-google-maps/api";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -26,11 +26,12 @@ import Sidebar from "../components/Sidebar";
 export default function ChatRoom() {
   const router = useRouter();
 
+  //소켓 연결 담당, 방 변경할 때 socketRef.current도 변경
   const socketRef = useRef(null);
   const inputRef = useRef(null);
   const chatRef = useRef(null);
   const promptRef = useRef(null);
-  const planRef = useRef(null)
+  const planRef = useRef(null);
 
   const [username, setUsername] = useState("");
   const [chatList, setChatList] = useState([]);
@@ -40,9 +41,9 @@ export default function ChatRoom() {
   const [selectedRoomUsers, setSelectedRoomUsers] = useState([]);
   const [aiChatGenerating, setAiChatGenerating] = useState(false);
   const [aiPromptGenerating, setAiPromptGenerating] = useState(false);
-  const [aiPlanGenerating, setAiPlanGenerating] = useState(false)
+  const [aiPlanGenerating, setAiPlanGenerating] = useState(false);
   const [openMenuRoom, setOpenMenuRoom] = useState(false);
-  const [promptRecommendText, setPromptRecommendText] = useState('')
+  const [promptRecommendText, setPromptRecommendText] = useState("");
 
   const [buttonOnOff, setButtonOnOff] = useState([
     false,
@@ -54,14 +55,14 @@ export default function ChatRoom() {
   const [modalOnOff, setModalOnOff] = useState(false);
   const [checkedIds, setCheckedIds] = useState([]);
 
-useEffect(() => {
+  useEffect(() => {
     if (chatRef.current) {
-        chatRef.current.scrollTo({
-          top: chatRef.current.scrollHeight,
-          behavior: "smooth",
-        });
+      chatRef.current.scrollTo({
+        top: chatRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
-}, [chatList]);
+  }, [chatList]);
 
   // 1) 컴포넌트 마운트 시 sessionStorage에서 username 읽어오기
   useEffect(() => {
@@ -70,6 +71,7 @@ useEffect(() => {
       ReactModal.setAppElement("body");
       if (storedUser) setUsername(storedUser);
     }
+    // sessionstorage에 username없다면 로그인 요청
     if (!storedUser) {
       router.push("/login");
       alert("로그인이 필요합니다.");
@@ -88,27 +90,35 @@ useEffect(() => {
     setCheckedIds([]);
     setButtonOnOff([false, false, false, false, false]);
 
+    // 방 선택 안 된 상태면 리턴
     if (selectedRoom === 0) return;
-    fetchChatHistory();
-    fetchRoomUsers();
+
+    // 기존 소켓 연결 해제
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
+
+    //기존 채팅 기록 및 유저 정보 불러옴
+    fetchChatHistory();
+    fetchRoomUsers();
+
+    // 새로 선택된 방에 대한 소켓 연결
     socketRef.current = io("http://localhost:4000", {
       auth: { username, roomId: selectedRoom },
     });
 
-    // 소켓 연결 후 채팅 메시지 수신
+    // 소켓 연결 후 들어오는 다른 유저의 채팅 메시지 수신
     socketRef.current.on("chatMsg", (data) => {
       setChatList((prev) => [
         ...prev,
-        { chat_id: data.chat_id,
+        {
+          chat_id: data.chat_id,
           is_plan: data.is_plan,
           map_image: data.map_image,
           message: data.message,
           room_id: data.room_id,
           sender_id: data.sender_id,
-          timestamp: data.timestamp
+          timestamp: data.timestamp,
         },
       ]);
       if (chatRef.current) {
@@ -119,6 +129,7 @@ useEffect(() => {
       }
     });
 
+    // 소켓 연결 후 들어오는 AI 답변 수신
     socketRef.current.on("AI_chat", (data) => {
       setAiChatGenerating(false);
       setChatList((prev) => {
@@ -133,7 +144,6 @@ useEffect(() => {
           };
           return updated;
         }
-        // Otherwise, add a new AI message entry
         return [...prev, { chat_id: data.chat_id, message: data.message }];
       });
       if (chatRef.current) {
@@ -144,6 +154,7 @@ useEffect(() => {
       }
     });
 
+    // AI 답변 생성이 완료됐을 때 신호
     socketRef.current.on("AI_chat_done", () => {
       setButtonOnOff((prev) => {
         const copy = [...prev];
@@ -153,32 +164,21 @@ useEffect(() => {
       setCheckedIds([]);
     });
 
+    // AI 답변 생성 중 에러 발생
     socketRef.current.on("AI-chat-error", (data) => {
-      setAiChatGenerating(false)
-      setAiPlanGenerating(false)
+      setAiChatGenerating(false);
+      setAiPlanGenerating(false);
       setButtonOnOff((prev) => {
         const copy = [...prev];
         copy[0] = false;
         return copy;
       });
-      planRef.current = false
+      planRef.current = false;
       setCheckedIds([]);
-      alert("다른 유저의 기능이 생성 완료될 때까지 기다려주세요!")
+      alert("다른 유저의 기능이 생성 완료될 때까지 기다려주세요!");
     });
 
-    socketRef.current.on("Travel-plan-error", (data) => {
-      setAiChatGenerating(false)
-      setAiPlanGenerating(false)
-      setButtonOnOff((prev) => {
-        const copy = [...prev];
-        copy[2] = false;
-        return copy;
-      });
-      planRef.current = false
-      setCheckedIds([]);
-      alert("다른 유저의 AI 기능이 완료될 때까지 기다려주세요!")
-    });
-
+    // 소켓 연결 후 들어오는 일정표 생성 답변 수신(글)
     socketRef.current.on("travel_plan", (data) => {
       setAiPlanGenerating(false);
       setChatList((prev) => {
@@ -186,7 +186,7 @@ useEffect(() => {
         if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
           const updated = [...prev];
           if (aiChatGenerating) {
-            setAiChatGenerating(false)
+            setAiChatGenerating(false);
           }
           const lastMessage = updated[lastIndex];
           updated[lastIndex] = {
@@ -207,9 +207,10 @@ useEffect(() => {
       }
     });
 
+    // 소캣 연결 후 들어오는 일정표 생성 답변 수신(좌표)
     socketRef.current.on("coordinate", (data) => {
-      planRef.current = false
-      setAiPlanGenerating(false)
+      planRef.current = false;
+      setAiPlanGenerating(false);
       setButtonOnOff((prev) => {
         const copy = [...prev];
         copy[2] = false;
@@ -220,7 +221,7 @@ useEffect(() => {
         if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
           const updated = [...prev];
           if (aiChatGenerating) {
-            setAiChatGenerating(false)
+            setAiChatGenerating(false);
           }
           const lastMessage = updated[lastIndex];
           updated[lastIndex] = {
@@ -231,8 +232,15 @@ useEffect(() => {
           };
           return updated;
         }
-        // Otherwise, add a new AI message entry
-        return [...prev, { chat_id: data.chat_id, message: data.message , is_plan: 1, sender_id: data.sender_id}];
+        return [
+          ...prev,
+          {
+            chat_id: data.chat_id,
+            message: data.message,
+            is_plan: 1,
+            sender_id: data.sender_id,
+          },
+        ];
       });
       if (chatRef.current) {
         chatRef.current.scrollTo({
@@ -242,6 +250,19 @@ useEffect(() => {
       }
     });
 
+    // 일정표 생성 중 에러 발생
+    socketRef.current.on("Travel-plan-error", (data) => {
+      setAiChatGenerating(false);
+      setAiPlanGenerating(false);
+      setButtonOnOff((prev) => {
+        const copy = [...prev];
+        copy[2] = false;
+        return copy;
+      });
+      planRef.current = false;
+      setCheckedIds([]);
+      alert("다른 유저의 AI 기능이 완료될 때까지 기다려주세요!");
+    });
 
     return () => {
       if (socketRef.current) {
@@ -251,7 +272,7 @@ useEffect(() => {
   }, [selectedRoom]);
 
   useEffect(() => {
-    setModalChatList(chatList.filter(item => item.is_plan !== 1));
+    setModalChatList(chatList.filter((item) => item.is_plan !== 1));
     if (modalOnOff) {
       setCheckedIds([]);
     }
@@ -281,7 +302,6 @@ useEffect(() => {
         { method: "GET" }
       );
       const data = await res.json();
-      console.log("채팅 내역:", data);
       if (res.ok) {
         setChatList([...data.data].reverse());
 
@@ -305,9 +325,9 @@ useEffect(() => {
   const sendChat = () => {
     if (!socketRef.current) return;
 
-    if(planRef.current) return;
+    if (planRef.current) return;
 
-    if(aiChatGenerating) return;
+    if (aiChatGenerating) return;
 
     const text = inputRef.current.value.trim();
     if (!text) return;
@@ -320,8 +340,9 @@ useEffect(() => {
     if (buttonOnOff[0]) {
       setAiChatGenerating(true);
     }
-      socketRef.current.emit("chatMsg", chatData);
-      inputRef.current.value = "";
+    // 소켓으로 채팅 전송 및 입력 창 초기화
+    socketRef.current.emit("chatMsg", chatData);
+    inputRef.current.value = "";
   };
 
   // 7) 선택한 채팅방의 유저 정보를 가져오는 함수
@@ -342,6 +363,7 @@ useEffect(() => {
     }
   };
 
+  // 8) 채팅방에 다른 유저를 초대하는 함수
   const handleInvite = (frinedList) => {
     if (frinedList == []) return;
     socketRef.current.on("invite", (data) => {});
@@ -353,6 +375,7 @@ useEffect(() => {
     fetchRoomUsers();
   };
 
+  // 9) 채팅방을 나가는 함수
   const handleLeave = () => {
     socketRef.current.on("leave", (data) => {});
     socketRef.current.on("leave-error", (error) => {
@@ -362,6 +385,7 @@ useEffect(() => {
     setOpenMenuRoom(null);
   };
 
+  // 9) 프롬프트 추천 기능
   const RecommendPrompt = async () => {
     if (buttonOnOff[1]) {
       setButtonOnOff((prev) => {
@@ -372,7 +396,7 @@ useEffect(() => {
       return;
     }
     try {
-      if(promptRef.current){
+      if (promptRef.current) {
         promptRef.current.innerText = "";
       }
       setPromptRecommendText("");
@@ -385,11 +409,14 @@ useEffect(() => {
       if (!text) return;
 
       setAiPromptGenerating(true);
-      const res = await fetch("http://localhost:4000/api/v1/ai/prompt-generation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatHistory:checkedIds, msg:text }),
-      });
+      const res = await fetch(
+        "http://localhost:4000/api/v1/ai/prompt-generation",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chatHistory: checkedIds, msg: text }),
+        }
+      );
       const data = await res.json();
       if (res.ok) {
         setPromptRecommendText(data.data);
@@ -402,6 +429,7 @@ useEffect(() => {
     }
   };
 
+  // 프롬프트 추천 클릭 이벤트
   const OnClickPrompt = () => {
     if (promptRef.current) {
       inputRef.current.value = promptRef.current.innerText;
@@ -411,26 +439,27 @@ useEffect(() => {
         return copy;
       });
     }
-  }
-  
+  };
+
+  // 10) 일정표 생성 함수
   const travel_plan = () => {
-    if(planRef.current){
-      alert("기존 AI 기능이 완료되면 실행해주세요!")
+    if (planRef.current) {
+      alert("기존 AI 기능이 완료되면 실행해주세요!");
       return;
     }
-    if(aiChatGenerating || aiPromptGenerating || aiPlanGenerating){
-      alert("기존 AI 기능이 완료되면 실행해주세요!")
-      return
+    if (aiChatGenerating || aiPromptGenerating || aiPlanGenerating) {
+      alert("기존 AI 기능이 완료되면 실행해주세요!");
+      return;
     }
-    planRef.current=true;
+    planRef.current = true;
     setButtonOnOff((prev) => {
       const copy = [...prev];
       copy[2] = true;
       return copy;
-    });    
-    setAiPlanGenerating(true)
+    });
+    setAiPlanGenerating(true);
     socketRef.current.emit("travel_plan", { chatHistory: checkedIds });
-  }
+  };
 
   return (
     <div className="flex h-screen">
@@ -483,9 +512,7 @@ useEffect(() => {
 
               if (chat.sender_id === username) {
                 return (
-                  <ChatBubbleMine key={idx}>
-                    {chat.message}
-                  </ChatBubbleMine>
+                  <ChatBubbleMine key={idx}>{chat.message}</ChatBubbleMine>
                 );
               } else {
                 return (
@@ -498,12 +525,16 @@ useEffect(() => {
             {(aiChatGenerating || aiPlanGenerating) && (
               <div className="flex flex-col w-full h-[30%]">
                 <div className="flex flex-row items-center w-[100%]">
-                  <Image src={logo_white} alt="logo" className="w-[5%] mr-1 ml-1" />
+                  <Image
+                    src={logo_white}
+                    alt="logo"
+                    className="w-[5%] mr-1 ml-1"
+                  />
                   <div className="font-semibold">Sena</div>
                 </div>
                 <div className="flex justify-center items-center w-[100%] bg-[#EAEAEA] mt-2 h-[80%] rounded-lg text-2xl">
-                  <div className="animate-pulse flex flex-row items-center space-x-2"> 
-                    <LuLoader /> 
+                  <div className="animate-pulse flex flex-row items-center space-x-2">
+                    <LuLoader />
                     <span>AI가 답변을 생성 중입니다...</span>
                   </div>
                 </div>
@@ -521,12 +552,21 @@ useEffect(() => {
               </div>
               <div
                 className={`w-full bg-[#D0D0D0] h-[60%] p-1 rounded-lg overflow-y-auto ${
-                  aiPromptGenerating ? "flex justify-center items-center font-bold" : ""
-                }`} 
+                  aiPromptGenerating
+                    ? "flex justify-center items-center font-bold"
+                    : ""
+                }`}
                 ref={promptRef}
                 onClick={OnClickPrompt}
               >
-                {aiPromptGenerating ? <div className="flex flex-row items-center"><CiEdit className="text-xl"/>프롬프트 작성 중...</div> : promptRecommendText}
+                {aiPromptGenerating ? (
+                  <div className="flex flex-row items-center">
+                    <CiEdit className="text-xl" />
+                    프롬프트 작성 중...
+                  </div>
+                ) : (
+                  promptRecommendText
+                )}
               </div>
             </div>
           )}
@@ -534,7 +574,7 @@ useEffect(() => {
             <textarea
               ref={inputRef}
               rows={1}
-              style={{ maxHeight: "4.5rem", color:"black"}}
+              style={{ maxHeight: "4.5rem", color: "black" }}
               placeholder="메시지를 입력하세요"
               onInput={(e) => {
                 e.target.style.height = "auto";
@@ -594,9 +634,7 @@ function ChatBubbleOther({ name, children }) {
           ul: ({ node, ...props }) => (
             <ul className="list-disc list-inside pl-6 mb-2" {...props} />
           ),
-          li: ({ node, ...props }) => (
-            <li className="mb-1" {...props} />
-          ),
+          li: ({ node, ...props }) => <li className="mb-1" {...props} />,
           a: ({ href, children }) => (
             <a
               href={href}
@@ -622,11 +660,7 @@ function ChatBubbleOther({ name, children }) {
     <div className="flex flex-col items-start mb-2">
       <div className="flex items-center">
         {name === "Sena" && (
-          <Image
-            src={logo_white}
-            alt="logo"
-            className="h-[2em] w-auto ml-1"
-          />
+          <Image src={logo_white} alt="logo" className="h-[2em] w-auto ml-1" />
         )}
         <div className="pl-2 font-semibold">{name}</div>
       </div>
@@ -658,8 +692,8 @@ function ChatBubbleMap({ coords }) {
   if (!coordsArr || coordsArr.length === 0) return null;
 
   // 좌표 배열에서 위도와 경도 분리
-  const lats = coordsArr.map(pos => Number(pos[0]));
-  const lngs = coordsArr.map(pos => Number(pos[1]));
+  const lats = coordsArr.map((pos) => Number(pos[0]));
+  const lngs = coordsArr.map((pos) => Number(pos[1]));
 
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
@@ -686,7 +720,7 @@ function ChatBubbleMap({ coords }) {
     zoom = Math.min(12, Math.max(7, zoom));
   }
 
-  return(
+  return (
     <LoadScriptNext googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API}>
       <GoogleMap
         mapContainerStyle={{ width: "70%", height: "100%" }}
@@ -694,11 +728,14 @@ function ChatBubbleMap({ coords }) {
         zoom={zoom}
       >
         {coordsArr.map((pos, i) => (
-          <MarkerF key={i} position={{ lat: Number(pos[0]), lng: Number(pos[1]) }} />
+          <MarkerF
+            key={i}
+            position={{ lat: Number(pos[0]), lng: Number(pos[1]) }}
+          />
         ))}
       </GoogleMap>
-  </LoadScriptNext>
-  )
+    </LoadScriptNext>
+  );
 }
 
 /*======== 모달채팅 버블 (Other) ========*/
@@ -778,11 +815,9 @@ function ButtonList({
               onClick={() => {
                 if (idx === 1) {
                   RecommendPrompt();
-                } 
-                else if(idx==2){
+                } else if (idx == 2) {
                   travel_plan();
-                }
-                else {
+                } else {
                   SetButtonOnOff((prev) => {
                     const copy = [...prev];
                     copy[idx] = !copy[idx];
@@ -895,7 +930,7 @@ function CheckModal({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="채팅 검색..."
-          style={{color:"black"}}
+          style={{ color: "black" }}
           className="flex-grow px-3 py-2 border-none rounded-md text-sm mr-2"
         />
         <button

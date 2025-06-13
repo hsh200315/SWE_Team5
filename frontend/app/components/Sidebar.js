@@ -15,7 +15,7 @@ export default function Sidebar({
   SetSelectedRoom,
   selectedRoomUsers,
   username,
-  aiChatGenerating,
+  generating,
   openMenuRoom,
   setOpenMenuRoom,
   handleInvite={handleInvite},
@@ -104,7 +104,7 @@ export default function Sidebar({
             <div key={idx.room_id} className="relative">
               <div
                 onClick={(e) => {
-                  if (!aiChatGenerating) {
+                  if (!generating) {
                     SetSelectedRoom(idx.room_id);
                   }
                 }}

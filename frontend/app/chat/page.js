@@ -32,6 +32,7 @@ export default function ChatRoom() {
   const chatRef = useRef(null);
   const promptRef = useRef(null);
   const planRef = useRef(null);
+  const loadingRef = useRef(null);
 
   const [username, setUsername] = useState("");
   const [chatList, setChatList] = useState([]);
@@ -53,6 +54,7 @@ export default function ChatRoom() {
   const [modalOnOff, setModalOnOff] = useState(false);
   const [checkedIds, setCheckedIds] = useState([]);
 
+  // 채팅 불러왔을 때, 화면을 하단으로 이동
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTo({
@@ -85,7 +87,6 @@ export default function ChatRoom() {
 
   // 3) selectedRoom이 바뀔 때마다 소켓 재연결 및 기존 채팅 불러오기
   useEffect(() => {
-    console.log(selectedRoom)
     setCheckedIds([]);
     setButtonOnOff([false, false, false, false, false]);
 
@@ -130,7 +131,8 @@ export default function ChatRoom() {
 
     // 소켓 연결 후 들어오는 AI 답변 수신
     socketRef.current.on("AI_chat", (data) => {
-      planRef.current = false
+      planRef.current = true
+      loadingRef.current = false
 
       setChatList((prev) => {
         const lastIndex = prev.length - 1;
@@ -156,6 +158,8 @@ export default function ChatRoom() {
 
     // AI 답변 생성이 완료됐을 때 신호
     socketRef.current.on("AI_chat_done", () => {
+      planRef.current = false
+      loadingRef.current = false
       setButtonOnOff((prev) => {
         const copy = [...prev];
         copy[0] = false;
@@ -167,6 +171,7 @@ export default function ChatRoom() {
     // AI 답변 생성 중 에러 발생
     socketRef.current.on("AI-chat-error", (data) => {
       planRef.current = false;
+      loadingRef.current = false;
 
       setButtonOnOff((prev) => {
         const copy = [...prev];
@@ -179,10 +184,11 @@ export default function ChatRoom() {
 
     // 소켓 연결 후 들어오는 일정표 생성 답변 수신(글)
     socketRef.current.on("travel_plan", (data) => {
-      planRef.current = false
+      planRef.current = true
+      loadingRef.current = false
       setChatList((prev) => {
         const lastIndex = prev.length - 1;
-        if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
+        if ((lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) && data.room_id == selectedRoom) {
           const updated = [...prev];
           const lastMessage = updated[lastIndex];
           updated[lastIndex] = {
@@ -192,7 +198,6 @@ export default function ChatRoom() {
           };
           return updated;
         }
-        // Otherwise, add a new AI message entry
         return [...prev, { chat_id: data.chat_id, message: data.message }];
       });
       if (chatRef.current) {
@@ -206,6 +211,7 @@ export default function ChatRoom() {
     // 소캣 연결 후 들어오는 일정표 생성 답변 수신(좌표)
     socketRef.current.on("coordinate", (data) => {
       planRef.current = false;
+      loadingRef.current = false
       setButtonOnOff((prev) => {
         const copy = [...prev];
         copy[2] = false;
@@ -213,7 +219,7 @@ export default function ChatRoom() {
       });
       setChatList((prev) => {
         const lastIndex = prev.length - 1;
-        if (lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) {
+        if ((lastIndex >= 0 && prev[lastIndex].chat_id === data.chat_id) && data.room_id == selectedRoom) {
           const updated = [...prev];
           const lastMessage = updated[lastIndex];
           updated[lastIndex] = {
@@ -234,6 +240,7 @@ export default function ChatRoom() {
           },
         ];
       });
+
       if (chatRef.current) {
         chatRef.current.scrollTo({
           top: chatRef.current.scrollHeight,
@@ -245,6 +252,7 @@ export default function ChatRoom() {
     // 일정표 생성 중 에러 발생
     socketRef.current.on("Travel-plan-error", (data) => {
       planRef.current = false;
+      loadingRef.current = false
 
       setButtonOnOff((prev) => {
         const copy = [...prev];
@@ -316,8 +324,11 @@ export default function ChatRoom() {
   const sendChat = () => {
     if (!socketRef.current) return;
 
-    // AI 답변 도착 전까진 채팅 제한
-    if (planRef.current) return;
+    // AI 답변 완성 전까진 채팅 제한
+    if (planRef.current) {
+      alert("기존 AI 기능이 완료되면 실행해주세요!")
+      return;
+    }
 
     const text = inputRef.current.value.trim();
     if (!text) return;
@@ -329,6 +340,7 @@ export default function ChatRoom() {
     };
     if (buttonOnOff[0]) {
       planRef.current = true
+      loadingRef.current = true
     }
     // 소켓으로 채팅 전송 및 입력 창 초기화
     socketRef.current.emit("chatMsg", chatData);
@@ -439,6 +451,7 @@ export default function ChatRoom() {
       return;
     }
     planRef.current = true;
+    loadingRef.current = true;
     setButtonOnOff((prev) => {
       const copy = [...prev];
       copy[2] = true;
@@ -508,7 +521,7 @@ export default function ChatRoom() {
                 );
               }
             })}
-            {(planRef.current) && (
+            {(loadingRef.current) && (
               <div className="flex flex-col w-full h-[30%]">
                 <div className="flex flex-row items-center w-[100%]">
                   <Image
